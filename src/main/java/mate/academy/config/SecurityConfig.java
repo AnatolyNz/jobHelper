@@ -1,4 +1,4 @@
-package mate.academy.repository.config;
+package mate.academy.config;
 
 import lombok.RequiredArgsConstructor;
 import mate.academy.security.JwtAuthenticationFilter;

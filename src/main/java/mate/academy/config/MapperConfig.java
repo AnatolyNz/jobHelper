@@ -1,4 +1,4 @@
-package mate.academy.repository.config;
+package mate.academy.config;
 
 import org.mapstruct.InjectionStrategy;
 import org.mapstruct.NullValueCheckStrategy;
