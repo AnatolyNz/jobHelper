@@ -1,0 +1,47 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-ai-customized-resumes-table
+      author: AnatoliiNazarov
+      changes:
+        - createTable:
+            tableName: ai_customized_resumes
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: content
+                  type: clob
+                  constraints:
+                    nullable: false
+              - column:
+                  name: generated_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: resume_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: job_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: ai_customized_resumes
+            baseColumnNames: resume_id
+            referencedTableName: resumes
+            referencedColumnNames: id
+            constraintName: fk_ai_customized_resume_resume
+        - addForeignKeyConstraint:
+            baseTableName: ai_customized_resumes
+            baseColumnNames: job_id
+            referencedTableName: jobs
+            referencedColumnNames: id
+            constraintName: fk_ai_customized_resume_job

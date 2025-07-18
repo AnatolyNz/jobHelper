@@ -1,0 +1,44 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-job-matches-table
+      author: AnatoliiNazarov
+      changes:
+        - createTable:
+            tableName: job_matches
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: match_score
+                  type: double
+                  constraints:
+                    nullable: false
+              - column:
+                  name: resume_id
+                  type: bigint           # <-- must match resumes.id type exactly
+                  constraints:
+                    nullable: false
+              - column:
+                  name: job_id
+                  type: bigint           # <-- assuming jobs.id is bigint as well
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: job_matches
+            baseColumnNames: resume_id
+            referencedTableName: resumes
+            referencedColumnNames: id
+            constraintName: fk_job_matches_resume
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: job_matches
+            baseColumnNames: job_id
+            referencedTableName: jobs
+            referencedColumnNames: id
+            constraintName: fk_job_matches_job
+            onDelete: CASCADE

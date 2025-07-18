@@ -1,0 +1,37 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-ats-evaluations-table
+      author: AnatoliiNazarov
+      changes:
+        - createTable:
+            tableName: ats_evaluations
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: score
+                  type: DOUBLE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: feedback
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: resume_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+        - addForeignKeyConstraint:
+            baseTableName: ats_evaluations
+            baseColumnNames: resume_id
+            referencedTableName: resumes
+            referencedColumnNames: id
+            constraintName: fk_ats_evaluations_resume
+            onDelete: CASCADE

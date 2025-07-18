@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-job-skills-table
+      author: AnatoliiNazarov
+      changes:
+        - createTable:
+            tableName: job_skills
+            columns:
+              - column:
+                  name: job_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: skill_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            columnNames: job_id, skill_id
+            tableName: job_skills
+            constraintName: pk_job_skills
+        - addForeignKeyConstraint:
+            baseTableName: job_skills
+            baseColumnNames: job_id
+            referencedTableName: jobs
+            referencedColumnNames: id
+            constraintName: fk_job_skills_job
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: job_skills
+            baseColumnNames: skill_id
+            referencedTableName: skills
+            referencedColumnNames: id
+            constraintName: fk_job_skills_skill
+            onDelete: CASCADE

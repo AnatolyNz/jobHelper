@@ -5,3 +5,29 @@ databaseChangeLog:
       file: db/changelog/changes/02-create-roles-table.yaml
   - include:
       file: db/changelog/changes/03-create-users-roles-table.yaml
+  - include:
+      file: db/changelog/changes/03b-create-jobs-table.yaml
+  - include:
+      file: db/changelog/changes/03c-add-company-column-to-jobs.yaml
+  - include:
+      file: db/changelog/changes/03d-add-location-column-to-jobs.yaml
+  - include:
+      file: db/changelog/changes/04-create-resumes-table.yaml
+  - include:
+      file: db/changelog/changes/05-create-ai-customized-resumes-table.yaml
+  - include:
+      file: db/changelog/changes/06-create-skills-table.yaml
+  - include:
+      file: db/changelog/changes/07-create-ats-evaluations-table.yaml
+  - include:
+      file: db/changelog/changes/08-create-job-applications-table.yaml
+  - include:
+      file: db/changelog/changes/09-create-job-application-statuses-table.yaml
+  - include:
+      file: db/changelog/changes/10-create-job-matches-table.yaml
+  - include:
+      file: db/changelog/changes/11-create-job-skills-table.yaml
+  - include:
+      file: db/changelog/changes/12-create-resume-skills-table.yaml
+  - include:
+      file: db/changelog/changes/13-create-surveys-table.yaml

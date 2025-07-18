@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-surveys-table
+      author: AnatoliiNazarov
+      runOnChange: true
+      changes:
+        - createTable:
+            tableName: surveys
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: experience_level
+                  type: VARCHAR(255)
+              - column:
+                  name: job_preferences
+                  type: LONGTEXT    # <-- change from CLOB to LONGTEXT
+              - column:
+                  name: location_preference
+                  type: VARCHAR(255)
+              - column:
+                  name: user_id
+                  type: BIGINT
+        - addForeignKeyConstraint:
+            baseTableName: surveys
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_surveys_user

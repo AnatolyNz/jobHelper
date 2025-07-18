@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-company-column-to-jobs
+      author: AnatoliiNazarov
+      changes:
+        - addColumn:
+            tableName: jobs
+            columns:
+              - column:
+                  name: company
+                  type: varchar(255)
+                  constraints:
+                    nullable: true

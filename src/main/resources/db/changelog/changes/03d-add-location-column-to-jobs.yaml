@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-location-column-to-jobs
+      author: AnatoliiNazarov
+      changes:
+        - addColumn:
+            tableName: jobs
+            columns:
+              - column:
+                  name: location
+                  type: varchar(255)
+                  constraints:
+                    nullable: true
