@@ -31,3 +31,5 @@ databaseChangeLog:
       file: db/changelog/changes/12-create-resume-skills-table.yaml
   - include:
       file: db/changelog/changes/13-create-surveys-table.yaml
+  - include:
+      file: db/changelog/changes/14-insert-roles.yaml

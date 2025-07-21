@@ -1,5 +1,6 @@
 package mate.academy.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -18,6 +19,7 @@ public class Skill {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true)
     private String name;
 
     @ManyToMany(mappedBy = "skills")
@@ -25,4 +27,11 @@ public class Skill {
 
     @ManyToMany(mappedBy = "requiredSkills")
     private List<Job> jobs;
+
+    public Skill() {
+    }
+
+    public Skill(String name) {
+        this.name = name;
+    }
 }

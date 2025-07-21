@@ -7,7 +7,7 @@ import lombok.Data;
 public class ResumeDto {
     private Long id;
     private Long userId;
-    private String fileUrl;
+    private String filePath;
     private String originalFileName;
     private List<String> extractedSkills;
 }

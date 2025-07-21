@@ -16,6 +16,10 @@ public interface ResumeMapper {
     @Mapping(source = "skills", target = "extractedSkills", qualifiedByName = "skillsToNames")
     ResumeDto toDto(Resume resume);
 
+    @Mapping(target = "user.id", source = "userId")
+    @Mapping(target = "skills", ignore = true)
+    Resume toEntity(ResumeDto resumeDto);
+
     @Named("skillsToNames")
     default List<String> mapSkillsToNames(List<Skill> skills) {
         return skills.stream()
