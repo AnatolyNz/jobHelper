@@ -42,7 +42,6 @@ public class ResumeController {
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    //@PostMapping("/{upload}")
     @Operation(summary = "Upload resume file", description
             = "Uploads a real resume file (PDF, DOCX) for a user")
     public ResponseEntity<String> uploadResume(@RequestParam("file") MultipartFile file,
