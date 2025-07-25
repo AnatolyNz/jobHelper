@@ -1,5 +1,6 @@
 package mate.academy.service.impl;
 
+import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import mate.academy.dto.ResumeDto;
@@ -12,6 +13,7 @@ import mate.academy.repository.SkillRepository;
 import mate.academy.repository.UserRepository;
 import mate.academy.service.ResumeService;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +27,24 @@ public class ResumeServiceImpl implements ResumeService {
     public Resume findById(Long id) {
         return resumeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Resume not found: " + id));
+    }
+
+    @Override
+    public Resume save(MultipartFile file, Long userId) {
+        Resume resume = new Resume();
+        resume.setUser(userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId)));
+
+        try {
+            resume.setFileName(file.getOriginalFilename());
+            resume.setFileType(file.getContentType());
+            resume.setFilePath("N/A");
+            resume.setFileData(file.getBytes());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to store resume file", e);
+        }
+
+        return resumeRepository.save(resume);
     }
 
     @Override

@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 04d-add-file-type-column-to-resumes
+      author: AnatoliiNazarov
+      changes:
+        - addColumn:
+            tableName: resumes
+            columns:
+              - column:
+                  name: file_type
+                  type: varchar(255)
+                  constraints:
+                    nullable: false

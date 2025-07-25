@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-file-data-column-to-resumes
+      author: AnatoliiNazarov
+      changes:
+        - addColumn:
+            tableName: resumes
+            columns:
+              - column:
+                  name: file_data
+                  type: LONGBLOB
