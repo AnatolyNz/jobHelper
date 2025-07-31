@@ -1,6 +1,9 @@
 package mate.academy.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -48,8 +51,20 @@ public class Resume {
     )
     private List<Skill> skills;
 
+    @ElementCollection
+    @CollectionTable(
+            name = "resume_extracted_skills",
+            joinColumns = @JoinColumn(name = "resume_id")
+    )
+    @Column(name = "skill", nullable = false)
+    private List<String> extractedSkills;
+
     @OneToOne(mappedBy = "resume")
     private AtsEvaluation atsEvaluation;
+
+    @OneToOne(mappedBy = "resume")
+    @JsonBackReference
+    private AiAnalyzedResume aiAnalyzedResume;
 
     @OneToOne(mappedBy = "resume")
     private AiCustomizedResume aiCustomizedResume;

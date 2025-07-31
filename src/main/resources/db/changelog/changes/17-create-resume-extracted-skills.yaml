@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-resume-extracted-skills
+      author: AnatoliiNazarov
+      changes:
+        - createTable:
+            tableName: resume_extracted_skills
+            columns:
+              - column:
+                  name: resume_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: skill
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: resume_extracted_skills
+            baseColumnNames: resume_id
+            referencedTableName: resumes
+            referencedColumnNames: id
+            constraintName: fk_resume_extracted_skills_resume

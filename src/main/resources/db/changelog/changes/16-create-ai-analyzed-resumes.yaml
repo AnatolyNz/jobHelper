@@ -1,0 +1,44 @@
+databaseChangeLog:
+  - changeSet:
+      id: 16-create-ai-analyzed-resumes
+      author: AnatoliiNazarov
+      changes:
+        - createTable:
+            tableName: ai_analyzed_resumes
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: ats_score
+                  type: DOUBLE
+              - column:
+                  name: grammar_feedback
+                  type: LONGTEXT
+              - column:
+                  name: structure_feedback
+                  type: LONGTEXT
+              - column:
+                  name: tone_feedback
+                  type: LONGTEXT
+              - column:
+                  name: action_verb_suggestions
+                  type: LONGTEXT
+              - column:
+                  name: quantification_suggestions
+                  type: LONGTEXT
+              - column:
+                  name: soft_skills_inferred
+                  type: LONGTEXT
+              - column:
+                  name: resume_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_ai_resume_resume
+                    referencedTableName: resumes
+                    referencedColumnNames: id

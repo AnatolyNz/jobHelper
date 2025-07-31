@@ -81,4 +81,12 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
         body.put(MESSAGE_OUT_PARAM, message);
         return new ResponseEntity<>(body, status);
     }
+
+    @ExceptionHandler(ResumeAnalysisException.class)
+    public ResponseEntity<Object> handleResumeAnalysisException(
+            ResumeAnalysisException ex,
+            WebRequest request
+    ) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
 }

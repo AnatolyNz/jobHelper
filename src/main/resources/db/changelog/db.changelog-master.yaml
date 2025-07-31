@@ -41,3 +41,7 @@ databaseChangeLog:
       file: db/changelog/changes/14-insert-roles.yaml
   - include:
       file: db/changelog/changes/15-remove-role-column-from-users.yaml
+  - include:
+      file: db/changelog/changes/16-create-ai-analyzed-resumes.yaml
+  - include:
+      file: db/changelog/changes/17-create-resume-extracted-skills.yaml
