@@ -2,10 +2,13 @@ package mate.academy.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.io.IOException;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import mate.academy.dto.ResumeDto;
 import mate.academy.mapper.ResumeMapper;
 import mate.academy.model.Resume;
+import mate.academy.service.ResumeParserService;
 import mate.academy.service.ResumeService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/resumes")
 public class ResumeController {
 
+    private final ResumeParserService resumeParserService;
     private final ResumeService resumeService;
     private final ResumeMapper resumeMapper;
 
@@ -42,12 +46,29 @@ public class ResumeController {
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Upload resume file", description
-            = "Uploads a real resume file (PDF, DOCX) for a user")
+    @Operation(summary = "Upload resume file", description = "Uploads a real resume "
+            + "file (PDF, DOCX) for a user")
     public ResponseEntity<String> uploadResume(@RequestParam("file") MultipartFile file,
                                                @RequestParam("userId") Long userId) {
-        Resume resume = resumeService.save(file, userId);
-        System.out.println("test1");
-        return ResponseEntity.ok("Resume uploaded with ID: " + resume.getId());
+        try {
+            byte[] fileData = file.getBytes();
+
+            String extractedText = resumeParserService.extractTextFromFileData(fileData);
+
+            List<String> extractedSkills = resumeParserService.extractSkills(extractedText);
+
+            ResumeDto resumeDto = new ResumeDto();
+            resumeDto.setFileName(file.getOriginalFilename());
+            resumeDto.setFileType(file.getContentType());
+            resumeDto.setFileData(fileData);
+            resumeDto.setUserId(userId);
+            resumeDto.setExtractedSkills(extractedSkills);
+
+            Resume savedResume = resumeService.save(resumeDto); // this links resume + skills
+            return ResponseEntity.ok("Resume uploaded with ID: " + savedResume.getId());
+
+        } catch (IOException e) {
+            return ResponseEntity.status(500).body("Failed to upload resume: " + e.getMessage());
+        }
     }
 }

@@ -17,7 +17,10 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.util.List;
+import java.util.Set;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Entity
 @Data
@@ -41,6 +44,8 @@ public class Resume {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private User user;
 
     @ManyToMany
@@ -49,7 +54,7 @@ public class Resume {
             joinColumns = @JoinColumn(name = "resume_id"),
             inverseJoinColumns = @JoinColumn(name = "skill_id")
     )
-    private List<Skill> skills;
+    private Set<Skill> skills;
 
     @ElementCollection
     @CollectionTable(
@@ -57,18 +62,26 @@ public class Resume {
             joinColumns = @JoinColumn(name = "resume_id")
     )
     @Column(name = "skill", nullable = false)
-    private List<String> extractedSkills;
+    private Set<String> extractedSkills;
 
     @OneToOne(mappedBy = "resume")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private AtsEvaluation atsEvaluation;
 
     @OneToOne(mappedBy = "resume")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @JsonBackReference
     private AiAnalyzedResume aiAnalyzedResume;
 
     @OneToOne(mappedBy = "resume")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private AiCustomizedResume aiCustomizedResume;
 
     @OneToMany(mappedBy = "resume")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<JobMatch> jobMatches;
 }

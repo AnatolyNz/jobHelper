@@ -1,6 +1,7 @@
 package mate.academy.mapper;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import mate.academy.dto.ResumeDto;
 import mate.academy.model.Resume;
@@ -23,7 +24,7 @@ public interface ResumeMapper {
     Resume toEntity(ResumeDto resumeDto);
 
     @Named("skillsToNames")
-    default List<String> mapSkillsToNames(List<Skill> skills) {
+    default List<String> skillsToNames(Set<Skill> skills) {
         return skills.stream()
                 .map(Skill::getName)
                 .collect(Collectors.toList());

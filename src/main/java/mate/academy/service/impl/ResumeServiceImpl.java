@@ -1,7 +1,8 @@
 package mate.academy.service.impl;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import mate.academy.dto.ResumeDto;
 import mate.academy.exception.EntityNotFoundException;
@@ -13,6 +14,7 @@ import mate.academy.repository.SkillRepository;
 import mate.academy.repository.UserRepository;
 import mate.academy.service.ResumeService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -24,8 +26,9 @@ public class ResumeServiceImpl implements ResumeService {
     private final UserRepository userRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public Resume findById(Long id) {
-        return resumeRepository.findById(id)
+        return resumeRepository.findByIdWithAllDetails(id)
                 .orElseThrow(() -> new EntityNotFoundException("Resume not found: " + id));
     }
 
@@ -55,13 +58,16 @@ public class ResumeServiceImpl implements ResumeService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found: "
                         + resumeDto.getUserId())));
 
+        resume.setFilePath("N/A");
+
         if (resumeDto.getExtractedSkills() != null) {
-            List<Skill> skills = resumeDto.getExtractedSkills().stream()
+            Set<Skill> skills = resumeDto.getExtractedSkills().stream()
                     .map(name -> name.trim().toLowerCase())
                     .distinct()
                     .map(name -> skillRepository.findByNameIgnoreCase(name)
                             .orElseGet(() -> skillRepository.save(new Skill(name))))
-                    .toList();
+                    .collect(Collectors.toSet());
+
             resume.setSkills(skills);
         }
 

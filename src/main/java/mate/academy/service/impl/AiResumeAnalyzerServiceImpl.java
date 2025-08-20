@@ -1,5 +1,7 @@
 package mate.academy.service.impl;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import lombok.RequiredArgsConstructor;
 import mate.academy.dto.AiAnalyzedResumeDto;
 import mate.academy.dto.ResumeDto;
@@ -45,7 +47,9 @@ public class AiResumeAnalyzerServiceImpl implements AiResumeAnalyzerService {
                 resume.getUser().getLastName(),
                 resume.getFileData(),
                 resume.getUser().getId(),
-                resume.getExtractedSkills()
+                resume.getExtractedSkills() == null
+                        ? Collections.emptyList()
+                        : new ArrayList<>(resume.getExtractedSkills())
         );
 
         // Extract text for analysis using only necessary Resume fields (like filename)
