@@ -44,7 +44,7 @@ public class JobController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_USER')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create new job", description = "Create a new job posting")
     public JobDto createJob(@RequestBody JobDto jobDto) {
@@ -52,7 +52,6 @@ public class JobController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Delete job", description = "Deletes a job by ID")
     public void deleteJob(@PathVariable Long id) {

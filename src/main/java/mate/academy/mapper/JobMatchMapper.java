@@ -10,5 +10,6 @@ public interface JobMatchMapper {
 
     @Mapping(source = "job.id", target = "jobId")
     @Mapping(source = "job.title", target = "jobTitle")
+    @Mapping(source = "resume.id", target = "resumeId")
     JobMatchDto toDto(JobMatch match);
 }

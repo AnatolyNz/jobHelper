@@ -1,13 +1,17 @@
 package mate.academy.service.impl;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import mate.academy.dto.JobDto;
 import mate.academy.mapper.JobMapper;
 import mate.academy.model.Job;
+import mate.academy.model.Skill;
 import mate.academy.repository.JobRepository;
+import mate.academy.repository.SkillRepository;
 import mate.academy.service.JobService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -15,21 +19,46 @@ public class JobServiceImpl implements JobService {
     private final JobRepository jobRepository;
     private final JobMapper jobMapper;
 
+    private final SkillRepository skillRepository;
+
     @Override
     public Job save(JobDto jobDto) {
         Job job = jobMapper.toModel(jobDto);
+
+        List<Skill> skills = job.getRequiredSkills().stream()
+                .map(skill -> skillRepository.findByNameIgnoreCase(skill.getName())
+                        .orElseGet(() -> skillRepository.save(skill)))
+                .collect(Collectors.toList());
+
+        job.setRequiredSkills(skills);
         return jobRepository.save(job);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Job> findAll() {
-        return jobRepository.findAll();
+        List<Job> jobs = jobRepository.findAll();
+
+        jobs.forEach(job -> {
+            job.getRequiredSkills().size();
+            job.getJobApplications().size();
+            job.getJobMatches().size();
+        });
+
+        return jobs;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Job findById(Long id) {
-        return jobRepository.findById(id)
+        Job job = jobRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Job not found with id: " + id));
+
+        job.getRequiredSkills().size();
+        job.getJobApplications().size();
+        job.getJobMatches().size();
+
+        return job;
     }
 
     @Override
