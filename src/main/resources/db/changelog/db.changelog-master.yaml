@@ -45,3 +45,5 @@ databaseChangeLog:
       file: db/changelog/changes/16-create-ai-analyzed-resumes.yaml
   - include:
       file: db/changelog/changes/17-create-resume-extracted-skills.yaml
+  - include:
+      file: db/changelog/changes/18-create-password-reset-tokens-table.yaml
