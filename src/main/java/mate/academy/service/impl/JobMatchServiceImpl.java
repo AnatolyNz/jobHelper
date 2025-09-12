@@ -46,8 +46,6 @@ public class JobMatchServiceImpl implements JobMatchService {
 
     private double calculateMatchScore(Job job, Resume resume) {
 
-        System.out.println("resume.getSkills(): " + resume.getSkills());
-
         long matchingSkills = job.getRequiredSkills().stream()
                 .filter(skill -> resume.getSkills().contains(skill))
                 .count();

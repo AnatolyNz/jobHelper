@@ -32,7 +32,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         PasswordResetToken resetToken = new PasswordResetToken();
         resetToken.setToken(token);
         resetToken.setUser(user);
-        resetToken.setExpiryDate(LocalDateTime.now().plusHours(1));
+        resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(15));
 
         tokenRepository.save(resetToken);
 
