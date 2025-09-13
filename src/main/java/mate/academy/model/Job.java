@@ -9,6 +9,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
 
@@ -32,11 +33,11 @@ public class Job {
             joinColumns = @JoinColumn(name = "job_id"),
             inverseJoinColumns = @JoinColumn(name = "skill_id")
     )
-    private List<Skill> requiredSkills;
+    private List<Skill> requiredSkills = new ArrayList<>();
 
     @OneToMany(mappedBy = "job")
-    private List<JobApplication> jobApplications;
+    private List<JobApplication> jobApplications = new ArrayList<>();
 
     @OneToMany(mappedBy = "job")
-    private List<JobMatch> jobMatches;
+    private List<JobMatch> jobMatches = new ArrayList<>();
 }

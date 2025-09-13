@@ -25,12 +25,25 @@ public class JobServiceImpl implements JobService {
     public Job save(JobDto jobDto) {
         Job job = jobMapper.toModel(jobDto);
 
-        List<Skill> skills = job.getRequiredSkills().stream()
-                .map(skill -> skillRepository.findByNameIgnoreCase(skill.getName())
-                        .orElseGet(() -> skillRepository.save(skill)))
+        if (job.getRequiredSkills() == null) {
+            job.setRequiredSkills(List.of());
+        }
+
+        List<Skill> skills = jobDto.getRequiredSkills().stream()
+                .map(name -> skillRepository.findByNameIgnoreCase(name)
+                        .orElseGet(() -> skillRepository.save(new Skill(name))))
                 .collect(Collectors.toList());
 
         job.setRequiredSkills(skills);
+
+        if (job.getJobApplications() == null) {
+            job.setJobApplications(List.of());
+        }
+
+        if (job.getJobMatches() == null) {
+            job.setJobMatches(List.of());
+        }
+
         return jobRepository.save(job);
     }
 

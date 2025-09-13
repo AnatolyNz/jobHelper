@@ -15,12 +15,10 @@ public interface ResumeMapper {
 
     @Mapping(source = "user.id", target = "userId")
     @Mapping(source = "skills", target = "extractedSkills", qualifiedByName = "skillsToNames")
-    @Mapping(source = "fileData", target = "fileData")
     ResumeDto toDto(Resume resume);
 
     @Mapping(target = "user.id", source = "userId")
     @Mapping(target = "skills", ignore = true)
-    @Mapping(source = "fileData", target = "fileData")
     Resume toEntity(ResumeDto resumeDto);
 
     @Named("skillsToNames")
