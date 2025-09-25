@@ -18,4 +18,5 @@ public class ResumeDto {
     private byte[] fileData;
     private Long userId;
     private List<String> extractedSkills;
+    private List<String> skillNames;
 }

@@ -1,5 +1,6 @@
 package mate.academy.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 import lombok.Data;
 
@@ -11,5 +12,7 @@ public class JobApplicationDto {
     private String jobTitle;
     private String company;
     private String status; // Enum suggested: PENDING, ACCEPTED, REJECTED, etc.
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime appliedAt;
 }

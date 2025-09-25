@@ -1,3 +1,5 @@
+DELETE FROM resumes;
+DELETE FROM users;
 INSERT INTO users (id, email, first_name, last_name, password, is_deleted)
 VALUES
     (1, 'user1@test.com', 'John', 'Doe', 'password1', 0),

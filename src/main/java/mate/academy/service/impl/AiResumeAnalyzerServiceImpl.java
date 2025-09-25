@@ -48,11 +48,10 @@ public class AiResumeAnalyzerServiceImpl implements AiResumeAnalyzerService {
                 resume.getFileData(),
                 resume.getUser().getId(),
                 resume.getExtractedSkills() == null
-                        ? Collections.emptyList()
-                        : new ArrayList<>(resume.getExtractedSkills())
+                        ? Collections.emptyList() : new ArrayList<>(resume.getExtractedSkills()),
+                Collections.emptyList()
         );
 
-        // Extract text for analysis using only necessary Resume fields (like filename)
         String text = resumeParserService.extractTextFromFileData(resumeDto.getFileData());
 
         Resume resumeEntity = new Resume();
@@ -74,10 +73,8 @@ public class AiResumeAnalyzerServiceImpl implements AiResumeAnalyzerService {
             throw new ResumeAnalysisException("Rule engine returned null analyzed resume");
         }
 
-        // Save analyzed resume
         result = analyzedResumeRepository.save(result);
 
-        // Map entity to DTO for response
         AiAnalyzedResumeDto dto = new AiAnalyzedResumeDto();
         dto.setId(result.getId());
         dto.setResumeFileName(resumeDto.getFileName());

@@ -2,7 +2,6 @@ package mate.academy.mapper;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import mate.academy.dto.ResumeDto;
 import mate.academy.model.Resume;
 import mate.academy.model.Skill;
@@ -14,7 +13,8 @@ import org.mapstruct.Named;
 public interface ResumeMapper {
 
     @Mapping(source = "user.id", target = "userId")
-    @Mapping(source = "skills", target = "extractedSkills", qualifiedByName = "skillsToNames")
+    @Mapping(source = "skills", target = "skillNames", qualifiedByName = "skillsToNames")
+    @Mapping(source = "extractedSkills", target = "extractedSkills")
     ResumeDto toDto(Resume resume);
 
     @Mapping(target = "user.id", source = "userId")
@@ -25,6 +25,6 @@ public interface ResumeMapper {
     default List<String> skillsToNames(Set<Skill> skills) {
         return skills.stream()
                 .map(Skill::getName)
-                .collect(Collectors.toList());
+                .toList();
     }
 }
