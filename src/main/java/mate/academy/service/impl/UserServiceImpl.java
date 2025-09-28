@@ -45,4 +45,12 @@ public class UserServiceImpl implements UserService {
         User savedUser = userRepository.save(user);
         return userMapper.toResponseDto(savedUser);
     }
+
+    @Override
+    public UserResponseDto getByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "User not found with email: " + email));
+        return userMapper.toResponseDto(user);
+    }
 }

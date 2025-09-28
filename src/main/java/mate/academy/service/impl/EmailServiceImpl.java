@@ -24,10 +24,11 @@ public class EmailServiceImpl implements EmailService {
         String subject = "Password Reset Request";
         String resetLink = resetPasswordUrl + "?token=" + token;
         String message = "Hello,\n\n"
-                + "Click the link below to reset your password:\n"
+                + "Натисніть посилання нижче, щоб скинути пароль::\n"
                 + resetLink + "\n\n"
-                + "If you didn’t request this, you can ignore this email.\n\n"
-                + "Best regards,\nYour App Team";
+                + "Якщо ви не надсилали цей запит, можете проігнорувати "
+                + "цей електронний лист.\n\n"
+                + "З найкращими побажаннями,\nВаша команда розробників додатків";
 
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setFrom(fromEmail);

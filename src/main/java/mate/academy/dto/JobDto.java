@@ -1,5 +1,6 @@
 package mate.academy.dto;
 
+import java.math.BigDecimal;
 import java.util.List;
 import lombok.Data;
 
@@ -11,4 +12,6 @@ public class JobDto {
     private List<String> requiredSkills;
     private String company;
     private String location;
+    private BigDecimal salary;
+    private String workFormat;
 }

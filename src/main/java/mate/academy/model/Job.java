@@ -1,6 +1,8 @@
 package mate.academy.model;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -9,6 +11,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
@@ -26,6 +29,10 @@ public class Job {
     private String description;
     private String location;
     private String company;
+    private BigDecimal salary;
+
+    @Enumerated(EnumType.STRING)
+    private WorkFormat workFormat;
 
     @ManyToMany
     @JoinTable(
@@ -40,4 +47,10 @@ public class Job {
 
     @OneToMany(mappedBy = "job")
     private List<JobMatch> jobMatches = new ArrayList<>();
+
+    public enum WorkFormat {
+        Віддалений,
+        Змішаний,
+        Офісний
+    }
 }

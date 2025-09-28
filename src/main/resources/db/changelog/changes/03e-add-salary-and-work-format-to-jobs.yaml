@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 03e-add-salary-and-work-format-to-jobs
+      author: AnatoliiNazarov
+      changes:
+        - addColumn:
+            tableName: jobs
+            columns:
+              - column:
+                  name: salary
+                  type: DECIMAL(10,2)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: work_format
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: true
