@@ -16,19 +16,16 @@ public class EmailServiceImpl implements EmailService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
-    @Value("${app.frontend.reset-password-url}")
-    private String resetPasswordUrl;
-
     @Override
     public void sendResetLink(String toEmail, String token) {
         String subject = "Password Reset Request";
-        String resetLink = resetPasswordUrl + "?token=" + token;
-        String message = "Hello,\n\n"
-                + "Натисніть посилання нижче, щоб скинути пароль::\n"
+        String resetLink = "код - " + token;
+        String message = "Привіт,\n\n"
+                + "Використайте код, щоб скинути пароль:\n"
                 + resetLink + "\n\n"
                 + "Якщо ви не надсилали цей запит, можете проігнорувати "
                 + "цей електронний лист.\n\n"
-                + "З найкращими побажаннями,\nВаша команда розробників додатків";
+                + "З найкращими побажаннями,\nВаша команда розробників";
 
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setFrom(fromEmail);

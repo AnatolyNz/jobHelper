@@ -11,7 +11,7 @@ public class JobApplicationDto {
     private Long jobId;
     private String jobTitle;
     private String company;
-    private String status; // Enum suggested: PENDING, ACCEPTED, REJECTED, etc.
+    private String status;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime appliedAt;
