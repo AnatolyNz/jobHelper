@@ -22,6 +22,9 @@ public interface JobMapper {
 
     @Named("skillsToNames")
     default List<String> mapSkillsToNames(List<Skill> skills) {
+        if (skills == null || skills.isEmpty()) {
+            return List.of();
+        }
         return skills.stream()
                 .map(Skill::getName)
                 .collect(Collectors.toList());
@@ -29,6 +32,9 @@ public interface JobMapper {
 
     @Named("namesToSkills")
     default List<Skill> mapNamesToSkills(List<String> skillNames) {
+        if (skillNames == null || skillNames.isEmpty()) {
+            return List.of();
+        }
         return skillNames.stream()
                 .map(name -> {
                     Skill skill = new Skill();

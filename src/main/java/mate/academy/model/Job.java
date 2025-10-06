@@ -50,7 +50,7 @@ public class Job {
 
     public enum WorkFormat {
         Віддалений,
-        Змішаний,
+        Гібридний,
         Офісний
     }
 }
