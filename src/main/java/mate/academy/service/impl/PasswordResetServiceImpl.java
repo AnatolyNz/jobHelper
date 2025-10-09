@@ -22,6 +22,16 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     private final EmailService emailService;
 
     @Override
+    public void verifyPasswordResetToken(String token) {
+        PasswordResetToken resetToken = tokenRepository.findByTokenWithUser(token)
+                .orElseThrow(() -> new EntityNotFoundException("Invalid verification code"));
+
+        if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Verification code expired");
+        }
+    }
+
+    @Override
     public String generatePasswordResetToken(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException(

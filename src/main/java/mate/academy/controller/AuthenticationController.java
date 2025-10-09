@@ -9,6 +9,8 @@ import mate.academy.dto.UserLoginRequestDto;
 import mate.academy.dto.UserLoginResponseDto;
 import mate.academy.dto.UserRegistrationRequestDto;
 import mate.academy.dto.UserResponseDto;
+import mate.academy.dto.VerifyCodeRequestDto;
+import mate.academy.exception.EntityNotFoundException;
 import mate.academy.exception.RegistrationException;
 import mate.academy.security.AuthenticationService;
 import mate.academy.service.PasswordResetService;
@@ -58,5 +60,19 @@ public class AuthenticationController {
                                                     @Valid ResetPasswordRequestDto request) {
         passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
         return ResponseEntity.ok("Password successfully reset.");
+    }
+
+    @PostMapping("/verify-code")
+    @Operation(summary = "Verify password reset code", description =
+            "Checks if the provided password reset code is valid")
+    public ResponseEntity<String> verifyCode(@RequestBody @Valid VerifyCodeRequestDto request) {
+        try {
+            passwordResetService.verifyPasswordResetToken(request.token());
+            return ResponseEntity.ok("Code verified");
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid verification code");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Verification code expired");
+        }
     }
 }
