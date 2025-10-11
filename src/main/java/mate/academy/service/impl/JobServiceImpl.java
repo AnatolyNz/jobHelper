@@ -1,5 +1,6 @@
 package mate.academy.service.impl;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -77,5 +78,36 @@ public class JobServiceImpl implements JobService {
     @Override
     public void delete(Long id) {
         jobRepository.deleteById(id);
+    }
+
+    @Override
+    public Job update(Long id, JobDto jobDto) {
+        Job existingJob = jobRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Job not found with id: " + id));
+
+        existingJob.setTitle(jobDto.getTitle());
+        existingJob.setDescription(jobDto.getDescription());
+        existingJob.setCompany(jobDto.getCompany());
+        existingJob.setLocation(jobDto.getLocation());
+        existingJob.setSalary(jobDto.getSalary());
+
+        if (jobDto.getWorkFormat() != null) {
+            try {
+                existingJob.setWorkFormat(Job.WorkFormat.valueOf(jobDto.getWorkFormat()));
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Invalid work format: " + jobDto.getWorkFormat()
+                        + ". Valid options: " + Arrays.toString(Job.WorkFormat.values()));
+            }
+        }
+
+        if (jobDto.getRequiredSkills() != null && !jobDto.getRequiredSkills().isEmpty()) {
+            List<Skill> skills = jobDto.getRequiredSkills().stream()
+                    .map(name -> skillRepository.findByNameIgnoreCase(name)
+                            .orElseGet(() -> skillRepository.save(new Skill(name))))
+                    .collect(Collectors.toList());
+            existingJob.setRequiredSkills(skills);
+        }
+
+        return jobRepository.save(existingJob);
     }
 }

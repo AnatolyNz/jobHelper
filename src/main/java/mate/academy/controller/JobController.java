@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -49,6 +50,13 @@ public class JobController {
     @Operation(summary = "Create new job", description = "Create a new job posting")
     public JobDto createJob(@RequestBody JobDto jobDto) {
         return jobMapper.toDto(jobService.save(jobDto));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @Operation(summary = "Update job", description = "Update an existing job posting by ID")
+    public JobDto updateJob(@PathVariable Long id, @RequestBody JobDto jobDto) {
+        return jobMapper.toDto(jobService.update(id, jobDto));
     }
 
     @DeleteMapping("/{id}")

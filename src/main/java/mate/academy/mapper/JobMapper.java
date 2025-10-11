@@ -1,5 +1,6 @@
 package mate.academy.mapper;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import mate.academy.dto.JobDto;
@@ -14,10 +15,12 @@ public interface JobMapper {
 
     @Mapping(source = "requiredSkills", target = "requiredSkills",
             qualifiedByName = "skillsToNames")
+    @Mapping(source = "workFormat", target = "workFormat", qualifiedByName = "enumToString")
     JobDto toDto(Job job);
 
     @Mapping(source = "requiredSkills", target = "requiredSkills",
             qualifiedByName = "namesToSkills")
+    @Mapping(source = "workFormat", target = "workFormat", qualifiedByName = "stringToEnum")
     Job toModel(JobDto jobDto);
 
     @Named("skillsToNames")
@@ -42,5 +45,23 @@ public interface JobMapper {
                     return skill;
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Named("stringToEnum")
+    default Job.WorkFormat mapStringToEnum(String workFormat) {
+        if (workFormat == null) {
+            return null;
+        }
+        try {
+            return Job.WorkFormat.valueOf(workFormat);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid work format: " + workFormat
+                    + ". Valid values are: " + Arrays.toString(Job.WorkFormat.values()));
+        }
+    }
+
+    @Named("enumToString")
+    default String mapEnumToString(Job.WorkFormat workFormat) {
+        return workFormat != null ? workFormat.name() : null;
     }
 }
