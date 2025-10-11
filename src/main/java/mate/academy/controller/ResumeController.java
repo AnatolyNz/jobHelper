@@ -3,7 +3,9 @@ package mate.academy.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import mate.academy.dto.ResumeDto;
 import mate.academy.mapper.ResumeMapper;
@@ -46,15 +48,14 @@ public class ResumeController {
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Upload resume file", description = "Uploads a real resume "
-            + "file (PDF, DOCX) for a user")
-    public ResponseEntity<String> uploadResume(@RequestParam("file") MultipartFile file,
-                                               @RequestParam("userId") Long userId) {
+    @Operation(summary = "Upload resume file", description =
+            "Uploads a real resume (PDF, DOCX) for a user")
+    public ResponseEntity<Map<String, Object>> uploadResume(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("userId") Long userId) {
         try {
             byte[] fileData = file.getBytes();
-
             String extractedText = resumeParserService.extractTextFromFileData(fileData);
-
             List<String> extractedSkills = resumeParserService.extractSkills(extractedText);
 
             ResumeDto resumeDto = new ResumeDto();
@@ -64,11 +65,20 @@ public class ResumeController {
             resumeDto.setUserId(userId);
             resumeDto.setExtractedSkills(extractedSkills);
 
-            Resume savedResume = resumeService.save(resumeDto); // this links resume + skills
-            return ResponseEntity.ok("Resume uploaded with ID: " + savedResume.getId());
+            Resume savedResume = resumeService.save(resumeDto);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Resume uploaded successfully");
+            response.put("resumeId", savedResume.getId());
+            response.put("skillsExtracted", extractedSkills);
+
+            return ResponseEntity.ok(response);
 
         } catch (IOException e) {
-            return ResponseEntity.status(500).body("Failed to upload resume: " + e.getMessage());
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Failed to upload resume");
+            error.put("details", e.getMessage());
+            return ResponseEntity.status(500).body(error);
         }
     }
 }

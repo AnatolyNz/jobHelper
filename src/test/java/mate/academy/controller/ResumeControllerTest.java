@@ -5,7 +5,6 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -56,7 +55,6 @@ class ResumeControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(resumeController).build();
         objectMapper = new ObjectMapper();
 
-        // sample data
         User user = new User();
         user.setId(1L);
 
@@ -106,7 +104,7 @@ class ResumeControllerTest {
     }
 
     @Test
-    @DisplayName("POST /resumes/upload - should upload file and return OK")
+    @DisplayName("POST /resumes/upload - should upload file and return OK with JSON")
     void uploadResume_ReturnsOk() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -123,6 +121,9 @@ class ResumeControllerTest {
                         .file(file)
                         .param("userId", "1"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Resume uploaded with ID: " + resume.getId()));
+                .andExpect(jsonPath("$.resumeId").value(resume.getId()))
+                .andExpect(jsonPath("$.message").value("Resume uploaded successfully"))
+                .andExpect(jsonPath("$.skillsExtracted[0]").value("Java"))
+                .andExpect(jsonPath("$.skillsExtracted[1]").value("Spring"));
     }
 }
