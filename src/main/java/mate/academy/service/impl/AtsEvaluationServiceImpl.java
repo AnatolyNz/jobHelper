@@ -19,7 +19,9 @@ public class AtsEvaluationServiceImpl implements AtsEvaluationService {
     );
 
     private static final List<String> usefulKeywords = List.of(
-            "developed", "managed", "designed", "led", "achieved", "implemented", "built", "created"
+            "developed", "managed", "designed", "led", "achieved", "implemented", "built",
+            "created", "розроблено", "керовано", "проектовано", "керував", "досягнуто",
+            "впроваджено", "створено"
     );
     private final ResumeRepository resumeRepository;
     private final AtsEvaluationRepository atsEvaluationRepository;
@@ -53,11 +55,12 @@ public class AtsEvaluationServiceImpl implements AtsEvaluationService {
 
         String feedback;
         if (totalScore >= 80) {
-            feedback = "Great resume! Well-structured and ATS-friendly.";
+            feedback = "Чудове резюме! Добре структуроване та зручне для ATS.";
         } else if (totalScore >= 50) {
-            feedback = "Resume is decent but could use more detail or structure.";
+            feedback = "Резюме непогане, але потребує більше деталей або структури.";
         } else {
-            feedback = "Resume lacks key sections and keywords. Improve formatting and content.";
+            feedback = "У резюме бракує ключових розділів та ключових слів. "
+                    + "Покращте форматування та зміст.";
         }
 
         AtsEvaluation evaluation = new AtsEvaluation();
