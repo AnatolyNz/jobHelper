@@ -3,6 +3,7 @@ package mate.academy.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import mate.academy.dto.ApiResponse;
 import mate.academy.dto.ForgotPasswordRequestDto;
 import mate.academy.dto.ResetPasswordRequestDto;
 import mate.academy.dto.UserLoginRequestDto;
@@ -65,14 +66,17 @@ public class AuthenticationController {
     @PostMapping("/verify-code")
     @Operation(summary = "Verify password reset code", description =
             "Checks if the provided password reset code is valid")
-    public ResponseEntity<String> verifyCode(@RequestBody @Valid VerifyCodeRequestDto request) {
+    public ResponseEntity<ApiResponse> verifyCode(@RequestBody @Valid
+                                                      VerifyCodeRequestDto request) {
         try {
             passwordResetService.verifyPasswordResetToken(request.token());
-            return ResponseEntity.ok("Code verified");
+            return ResponseEntity.ok(new ApiResponse("Code verified"));
         } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid verification code");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse("Invalid verification code"));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Verification code expired");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse("Verification code expired"));
         }
     }
 }
