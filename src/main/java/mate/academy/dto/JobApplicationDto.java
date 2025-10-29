@@ -1,7 +1,7 @@
 package mate.academy.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.util.List;
 import lombok.Data;
 
 @Data
@@ -9,10 +9,12 @@ public class JobApplicationDto {
     private Long id;
     private Long userId;
     private Long jobId;
-    private String jobTitle;
+    private String title;
+    private String description;
+    private List<String> requiredSkills;
     private String company;
+    private String location;
+    private BigDecimal salary;
+    private String workFormat;
     private String status;
-
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime appliedAt;
 }
