@@ -1,8 +1,8 @@
 package mate.academy.service;
 
 import java.util.List;
-import mate.academy.model.JobMatch;
+import mate.academy.dto.JobMatchDto;
 
 public interface JobMatchService {
-    List<JobMatch> findMatchesForResume(Long resumeId);
+    List<JobMatchDto> findMatchesForResume(Long resumeId, Long jobId);
 }

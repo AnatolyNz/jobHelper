@@ -1,57 +1,73 @@
 package mate.academy.service.impl;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import mate.academy.dto.JobMatchDto;
+import mate.academy.exception.EntityNotFoundException;
 import mate.academy.model.Job;
-import mate.academy.model.JobMatch;
 import mate.academy.model.Resume;
-import mate.academy.repository.JobMatchRepository;
+import mate.academy.model.Skill;
+import mate.academy.repository.JobRepository;
 import mate.academy.repository.ResumeRepository;
 import mate.academy.service.JobMatchService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class JobMatchServiceImpl implements JobMatchService {
-    private final JobMatchRepository jobMatchRepository;
+
+    private static final int PAGE_SIZE = 50;
+
     private final ResumeRepository resumeRepository;
+    private final JobRepository jobRepository;
 
     @Override
-    public List<JobMatch> findMatchesForResume(Long resumeId) {
-        Resume resume = resumeRepository.findByIdWithSkillsAndUserRoles(resumeId)
-                .orElseThrow(() -> new RuntimeException("Resume not found"));
+    @Transactional(readOnly = true)
+    public List<JobMatchDto> findMatchesForResume(Long resumeId, Long jobId) {
+        Resume resume = resumeRepository.findByIdWithSkills(resumeId)
+                .orElseThrow(() -> new EntityNotFoundException("Resume not found: " + resumeId));
 
-        resume.getExtractedSkills().size();
+        if (jobId != null) {
+            Job job = jobRepository.findByIdWithRequiredSkills(jobId)
+                    .orElseThrow(() -> new EntityNotFoundException("Job not found: " + jobId));
+            return List.of(calculateJobMatch(resume, job));
+        }
 
-        System.out.println("Extracted skills: " + resume.getExtractedSkills());
-
-        System.out.println("resume: " + resume);
-
-        List<Job> jobs = jobMatchRepository.findAllWithRequiredSkills();
-
-        return jobs.stream()
-                .map(job -> {
-                    double matchScore = calculateMatchScore(job, resume);
-
-                    JobMatch match = new JobMatch();
-                    match.setJob(job);
-                    match.setResume(resume);
-                    match.setMatchScore(matchScore);
-
-                    return jobMatchRepository.save(match);
-                })
-                .collect(Collectors.toList());
+        try (Stream<Job> jobStream = streamAllJobs()) {
+            return jobStream.map(job -> calculateJobMatch(resume, job))
+                    .toList(); // Java 16+, use Collectors.toList() if older
+        }
     }
 
-    private double calculateMatchScore(Job job, Resume resume) {
+    private Stream<Job> streamAllJobs() {
+        return Stream.iterate(0, page -> page + 1)
+                .map(page -> jobRepository.findAllWithRequiredSkills(PageRequest
+                        .of(page, PAGE_SIZE)))
+                .takeWhile(page -> !page.isEmpty())
+                .flatMap(Page::stream);
+    }
 
-        long matchingSkills = job.getRequiredSkills().stream()
-                .filter(skill -> resume.getSkills().contains(skill))
+    private JobMatchDto calculateJobMatch(Resume resume, Job job) {
+        List<Skill> resumeSkills = resume.getSkills().stream().toList();
+        List<Skill> requiredSkills = job.getRequiredSkills();
+
+        long matched = resumeSkills.stream()
+                .filter(rs -> requiredSkills.stream()
+                        .anyMatch(js -> js.getName().equalsIgnoreCase(rs.getName())))
                 .count();
 
-        double matchScore = (double) matchingSkills / job.getRequiredSkills().size() * 100;
+        double matchScore = requiredSkills.isEmpty() ? 0.0 : (matched * 100.0
+                / requiredSkills.size());
 
-        return matchScore;
+        JobMatchDto dto = new JobMatchDto();
+        dto.setJobId(job.getId());
+        dto.setJobTitle(job.getTitle());
+        dto.setResumeId(resume.getId());
+        dto.setMatchScore(matchScore);
+        return dto;
     }
 }
