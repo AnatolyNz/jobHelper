@@ -21,13 +21,14 @@ public class GrammarCheckServiceImpl implements GrammarCheckService {
                 return "No major grammar or spelling issues found.";
             }
 
-            StringBuilder feedback = new StringBuilder("Grammar and spelling issues found:\n");
+            StringBuilder feedback = new StringBuilder("Виявлено граматичні "
+                    + "та орфографічні помилки:\n");
             for (RuleMatch match : matches) {
-                feedback.append("- At position ")
+                feedback.append("- На позиції ")
                         .append(match.getFromPos())
                         .append(": ")
                         .append(match.getMessage())
-                        .append(" (Suggestion: ")
+                        .append(" (Пропозиція: ")
                         .append(String.join(", ", match.getSuggestedReplacements()))
                         .append(")\n");
             }

@@ -43,6 +43,6 @@ public class ResumeRuleEngineImpl implements ResumeRuleEngine {
 
     @Override
     public AiAnalyzedResume combine(AiAnalyzedResume resume) {
-        return null;
+        return resume;
     }
 }

@@ -48,7 +48,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDto getByEmail(String email) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailWithRoles(email)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "User not found with email: " + email));
         return userMapper.toResponseDto(user);

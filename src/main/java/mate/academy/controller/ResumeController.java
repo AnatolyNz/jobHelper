@@ -2,6 +2,7 @@ package mate.academy.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +41,22 @@ public class ResumeController {
         return resumeMapper.toDto(resume);
     }
 
+    @GetMapping("/{id}/file")
+    @Operation(summary = "Download resume file", description =
+            "Returns the uploaded resume file by ID")
+    public ResponseEntity<byte[]> downloadResumeFile(@PathVariable Long id) {
+        Resume resume = resumeService.findById(id);
+        if (resume == null || resume.getFileData() == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(resume.getFileType()))
+                .header("Content-Disposition", "attachment; "
+                        + "filename=\"" + resume.getFileName() + "\"")
+                .body(resume.getFileData());
+    }
+
     @PostMapping
     @Operation(summary = "Create resume", description = "Allows users to add/upload a resume")
     public ResumeDto createResume(@RequestBody ResumeDto resumeDto) {
@@ -52,7 +69,9 @@ public class ResumeController {
             "Uploads a real resume (PDF, DOCX) for a user")
     public ResponseEntity<Map<String, Object>> uploadResume(
             @RequestParam("file") MultipartFile file,
-            @RequestParam("userId") Long userId) {
+            @RequestParam("userId") Long userId,
+            HttpServletRequest request) {
+        //@RequestParam("userId") Long userId) {
         try {
             byte[] fileData = file.getBytes();
             String extractedText = resumeParserService.extractTextFromFileData(fileData);
@@ -67,10 +86,19 @@ public class ResumeController {
 
             Resume savedResume = resumeService.save(resumeDto);
 
+            String fileUrl = String.format(
+                    "%s://%s:%d/api/resumes/%d/file",
+                    request.getScheme(),
+                    request.getServerName(),
+                    request.getServerPort(),
+                    savedResume.getId()
+            );
+
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Resume uploaded successfully");
             response.put("resumeId", savedResume.getId());
             response.put("skillsExtracted", extractedSkills);
+            response.put("fileUrl", fileUrl);
 
             return ResponseEntity.ok(response);
 
@@ -81,4 +109,5 @@ public class ResumeController {
             return ResponseEntity.status(500).body(error);
         }
     }
+
 }

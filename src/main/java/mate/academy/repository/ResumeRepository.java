@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface ResumeRepository extends JpaRepository<Resume, Long> {
     @Query("""
-    SELECT r FROM Resume r
+    SELECT DISTINCT r FROM Resume r
     LEFT JOIN FETCH r.jobMatches
     LEFT JOIN FETCH r.skills
     LEFT JOIN FETCH r.extractedSkills

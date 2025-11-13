@@ -60,10 +60,13 @@ public class ResumeServiceImpl implements ResumeService {
 
         resume.setFilePath("N/A");
 
-        if (resumeDto.getExtractedSkills() != null) {
-            Set<Skill> skills = resumeDto.getExtractedSkills().stream()
+        if (resumeDto.getExtractedSkills() != null && !resumeDto.getExtractedSkills().isEmpty()) {
+            Set<String> normalizedNames = resumeDto.getExtractedSkills().stream()
+                    .filter(name -> name != null && !name.trim().isEmpty())
                     .map(name -> name.trim().toLowerCase())
-                    .distinct()
+                    .collect(Collectors.toSet());
+
+            Set<Skill> skills = normalizedNames.stream()
                     .map(name -> skillRepository.findByNameIgnoreCase(name)
                             .orElseGet(() -> skillRepository.save(new Skill(name))))
                     .collect(Collectors.toSet());

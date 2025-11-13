@@ -9,14 +9,22 @@ import org.springframework.stereotype.Service;
 @Service
 public class SuggestionServiceImpl implements SuggestionService {
 
+    // English + Ukrainian action verbs
     private static final List<String> ACTION_VERBS = List.of(
             "developed", "managed", "led", "implemented", "built",
-            "designed", "optimized", "analyzed"
+            "designed", "optimized", "analyzed",
+            // Ukrainian equivalents
+            "розробив", "керував", "очолював", "впровадив",
+            "створив", "спроєктував", "оптимізував", "аналізував"
     );
 
+    // English + Ukrainian soft skills
     private static final List<String> SOFT_SKILLS = List.of(
             "communication", "teamwork", "leadership",
-            "adaptability", "problem-solving", "collaboration"
+            "adaptability", "problem-solving", "collaboration",
+            // Ukrainian equivalents
+            "комунікація", "робота в команді", "лідерство",
+            "адаптивність", "розв'язання проблем", "співпраця"
     );
 
     private static final Pattern QUANTIFICATION_PATTERN = Pattern.compile("\\b\\d+(\\.\\d+)?\\b");
@@ -24,39 +32,41 @@ public class SuggestionServiceImpl implements SuggestionService {
     @Override
     public String analyze(String resumeText) {
         StringBuilder feedback = new StringBuilder("🧠 Suggestion Summary:\n");
+        String lowerText = resumeText.toLowerCase();
 
-        // Action verbs
+        // --- Action verbs ---
         long verbMatches = ACTION_VERBS.stream()
-                .filter(verb -> resumeText.toLowerCase().contains(verb))
+                .filter(lowerText::contains)
                 .count();
         if (verbMatches >= 3) {
-            feedback.append("✅ Good use of action verbs.\n");
+            feedback.append("✅ Гарне використання дієслів дії (EN/UA).\n");
         } else {
-            feedback.append("📌 Add more action verbs (e.g., developed, managed, implemented).\n");
+            feedback.append("📌 Додайте більше дієслів дії "
+                    + "(e.g., developed, managed, implemented / розробив, впровадив).\n");
         }
 
-        // Quantification
+        // --- Quantification (numbers) ---
         Matcher matcher = QUANTIFICATION_PATTERN.matcher(resumeText);
         int numberCount = 0;
         while (matcher.find()) {
             numberCount++;
         }
         if (numberCount >= 3) {
-            feedback.append("✅ Achievements are well quantified.\n");
+            feedback.append("✅ Досягнення добре кількісно виражені.\n");
         } else {
-            feedback.append("📌 Add metrics to describe "
-                    + "your impact (e.g., 'increased sales by 25%').\n");
+            feedback.append("📌 Додайте вимірювані результати "
+                    + "(e.g., 'increased sales by 25%' / 'підвищив продажі на 25%').\n");
         }
 
-        // Soft skills
+        // --- Soft skills ---
         long softSkillMentions = SOFT_SKILLS.stream()
-                .filter(skill -> resumeText.toLowerCase().contains(skill))
+                .filter(lowerText::contains)
                 .count();
         if (softSkillMentions >= 2) {
-            feedback.append("✅ Includes relevant soft skills.\n");
+            feedback.append("✅ Включає відповідні м'які навички (EN/UA).\n");
         } else {
-            feedback.append("📌 Consider including soft "
-                    + "skills (e.g., communication, problem-solving).\n");
+            feedback.append("📌 Подумайте про додавання м'яких навичок "
+                    + "(e.g., communication, teamwork / комунікація, робота в команді).\n");
         }
 
         return feedback.toString();
@@ -65,7 +75,8 @@ public class SuggestionServiceImpl implements SuggestionService {
     @Override
     public String suggestVerbs(String text) {
         String lowerText = text.toLowerCase();
-        StringBuilder suggestions = new StringBuilder("Consider adding these action verbs:\n");
+        StringBuilder suggestions = new StringBuilder("Розгляньте можливість "
+                + "додавання цих дієслів дії:\n");
         boolean hasSuggestions = false;
 
         for (String verb : ACTION_VERBS) {
@@ -75,8 +86,8 @@ public class SuggestionServiceImpl implements SuggestionService {
             }
         }
 
-        return hasSuggestions ? suggestions.toString() : "Great! "
-                + "You have a good range of action verbs.";
+        return hasSuggestions ? suggestions.toString()
+                : "Чудово! У вас є хороший вибір дієслів дії (англійською чи українською).";
     }
 
     @Override
@@ -88,19 +99,17 @@ public class SuggestionServiceImpl implements SuggestionService {
         }
 
         if (count >= 3) {
-            return "Your resume has sufficient quantification with metrics.";
+            return "✅ Ваше резюме має достатню кількісну оцінку з метриками.";
         } else {
-            return "Try to add more numbers and metrics "
-                    + "to quantify your achievements "
-                    + "(e.g., 'increased sales by 25%').";
+            return "📌 Спробуйте додати більше цифр та вимірюваних результатів "
+                    + "(e.g., 'increased efficiency by 30%' / 'зменшив витрати на 30%').";
         }
     }
 
     @Override
     public String inferSoftSkills(String text) {
         String lowerText = text.toLowerCase();
-        StringBuilder foundSkills =
-                new StringBuilder("Detected soft skills:\n");
+        StringBuilder foundSkills = new StringBuilder("Detected soft skills:\n");
         boolean anyFound = false;
 
         for (String skill : SOFT_SKILLS) {
@@ -110,21 +119,22 @@ public class SuggestionServiceImpl implements SuggestionService {
             }
         }
 
-        return anyFound ? foundSkills.toString() :
-                "No soft skills detected. Consider adding "
-                        + "skills like communication, teamwork, etc.";
+        return anyFound ? foundSkills.toString()
+                : "📌 М’які навички не вказані. Розгляньте можливість їх додати. "
+                + "skills like communication, teamwork / комунікація, робота в команді.";
     }
 
     @Override
     public String estimateTone(String text) {
         String lowerText = text.toLowerCase();
 
-        if (lowerText.contains("success") || lowerText
-                .contains("achieved") || lowerText.contains("exceeded")) {
+        if (lowerText.contains("success") || lowerText.contains("achieved")
+                || lowerText.contains("exceeded") || lowerText.contains("успішно")
+                || lowerText.contains("досяг") || lowerText.contains("перевищив")) {
             return "Positive";
-        } else if (lowerText.contains("failed")
-                || lowerText.contains("problem")
-                || lowerText.contains("issue")) {
+        } else if (lowerText.contains("failed") || lowerText.contains("problem")
+                || lowerText.contains("issue") || lowerText.contains("невдача")
+                || lowerText.contains("проблема") || lowerText.contains("помилка")) {
             return "Negative";
         } else {
             return "Neutral";

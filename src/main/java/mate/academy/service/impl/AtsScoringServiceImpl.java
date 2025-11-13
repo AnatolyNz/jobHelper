@@ -1,7 +1,9 @@
 package mate.academy.service.impl;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import mate.academy.dto.AtsScoreResult;
 import mate.academy.service.AtsScoringService;
@@ -12,23 +14,23 @@ import org.springframework.stereotype.Service;
 public class AtsScoringServiceImpl implements AtsScoringService {
 
     private static final List<String> SECTIONS_EN = List.of(
-            "experience", "education", "skills", "contact", "summary",
-            "projects", "previous experience", "additional education", "achievements"
+            "Experience", "Education", "Skills", "Contact", "Summary",
+            "Projects", "Previous Experience", "Additional Education", "Achievements"
     );
 
     private static final List<String> SECTIONS_UA = List.of(
-            "досвід", "освіта", "навички", "контакт", "резюме",
-            "проекти", "попередній досвід", "додаткова освіта", "досягнення"
+            "Досвід", "Освіта", "Навички", "Контакт", "Резюме",
+            "Проекти", "Попередній досвід", "Додаткова освіта", "Досягнення"
     );
 
     private static final List<String> KEYWORDS_EN = List.of(
-            "developed", "led", "managed", "achieved", "designed", "built",
-            "implemented", "tested", "deployed", "contributed", "prepared", "participated"
+            "Developed", "Led", "Managed", "Achieved", "Designed", "Built",
+            "Implemented", "Tested", "Deployed", "Contributed", "Prepared", "Participated"
     );
 
     private static final List<String> KEYWORDS_UA = List.of(
-            "розроблено", "керовано", "досягнуто", "спроектовано", "створено", "збудовано",
-            "впроваджено", "протестовано", "розгорнуто", "підготовлено", "брав участь"
+            "Розроблено", "Керовано", "Досягнуто", "Спроектовано", "Створено", "Збудовано",
+            "Впроваджено", "Протестовано", "Розгорнуто", "Підготовлено", "Брав участь"
     );
 
     @Override
@@ -38,21 +40,49 @@ public class AtsScoringServiceImpl implements AtsScoringService {
 
     @Override
     public AtsScoreResult scoreDetailed(String text) {
-        // normalize text: lowercase, remove bullets, pipes, punctuation, extra spaces
+        if (text == null || text.isBlank()) {
+            return new AtsScoreResult(0, 0,
+                    0, List.of(), List.of(),
+                    List.of(), List.of(), "UNKNOWN");
+        }
+
+        // ✅ Normalize text
         String normalized = text.toLowerCase()
                 .replace("", " ")
                 .replace("|", " ")
-                .replaceAll("[^a-zA-Zа-яА-Я0-9\\s]", " ")
-                .replaceAll("\\s+", " ");
+                .replaceAll("[^a-zа-я0-9\\s]", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
 
-        // count matches
-        long secEn = SECTIONS_EN.stream().filter(normalized::contains).count();
-        long secUa = SECTIONS_UA.stream().filter(normalized::contains).count();
-        long keyEn = KEYWORDS_EN.stream().filter(normalized::contains).count();
-        long keyUa = KEYWORDS_UA.stream().filter(normalized::contains).count();
+        // ✅ Use Stream + Collectors.toSet() (fixes IllegalArgumentException)
+        Set<String> words = Stream.of(normalized.split("\\s+"))
+                .collect(Collectors.toSet());
 
+        // Count sections and keywords
+        long secEn = SECTIONS_EN.stream()
+                .map(String::toLowerCase)
+                .filter(normalized::contains)
+                .count();
+
+        long secUa = SECTIONS_UA.stream()
+                .map(String::toLowerCase)
+                .filter(normalized::contains)
+                .count();
+
+        long keyEn = KEYWORDS_EN.stream()
+                .map(String::toLowerCase)
+                .filter(words::contains)
+                .count();
+
+        long keyUa = KEYWORDS_UA.stream()
+                .map(String::toLowerCase)
+                .filter(words::contains)
+                .count();
+
+        // Detect language
         String language = detectLanguage(secEn, secUa, keyEn, keyUa);
 
+        // Choose base lists depending on language
         List<String> baseSections;
         List<String> baseKeywords;
 
@@ -71,6 +101,7 @@ public class AtsScoringServiceImpl implements AtsScoringService {
             }
         }
 
+        // Calculate score fractions
         double sectionFrac = getFraction(language, secEn, secUa,
                 SECTIONS_EN.size(), SECTIONS_UA.size());
         double keywordFrac = getFraction(language, keyEn, keyUa,
@@ -80,18 +111,21 @@ public class AtsScoringServiceImpl implements AtsScoringService {
         double keywordScore = Math.min(keywordFrac * 50.0, 50.0);
         double totalScore = sectionScore + keywordScore;
 
+        // Build found/missing lists
         List<String> foundSections = baseSections.stream()
-                .filter(normalized::contains)
+                .filter(s -> normalized.contains(s.toLowerCase()))
                 .collect(Collectors.toList());
+
         List<String> missingSections = baseSections.stream()
-                .filter(s -> !normalized.contains(s))
+                .filter(s -> !normalized.contains(s.toLowerCase()))
                 .collect(Collectors.toList());
 
         List<String> foundKeywords = baseKeywords.stream()
-                .filter(normalized::contains)
+                .filter(k -> words.contains(k.toLowerCase()))
                 .collect(Collectors.toList());
+
         List<String> missingKeywords = baseKeywords.stream()
-                .filter(k -> !normalized.contains(k))
+                .filter(k -> !words.contains(k.toLowerCase()))
                 .collect(Collectors.toList());
 
         return new AtsScoreResult(
@@ -133,7 +167,7 @@ public class AtsScoringServiceImpl implements AtsScoringService {
     }
 
     private List<String> mergeLists(List<String> a, List<String> b) {
-        return a.stream()
+        return Stream.concat(a.stream(), b.stream())
                 .distinct()
                 .collect(Collectors.toList());
     }
