@@ -3,6 +3,7 @@ package mate.academy.security;
 import lombok.RequiredArgsConstructor;
 import mate.academy.dto.UserLoginRequestDto;
 import mate.academy.dto.UserLoginResponseDto;
+import mate.academy.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,7 +24,10 @@ public class AuthenticationService {
                 new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
 
-        String token = jwtUtil.generateToken(request.email());
+        User user = (User) authentication.getPrincipal();
+
+        String token = jwtUtil.generateToken(user.getId(), user.getEmail());
+
         return new UserLoginResponseDto(token);
     }
 }
