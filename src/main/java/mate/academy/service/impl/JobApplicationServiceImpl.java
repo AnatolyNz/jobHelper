@@ -27,13 +27,16 @@ public class JobApplicationServiceImpl implements JobApplicationService {
 
     @Override
     public List<JobApplication> findByUserId(Long userId) {
-        return jobApplicationRepository.findByUserId(userId);
+        return jobApplicationRepository.findByUserIdWithDetails(userId);
     }
 
     @Override
     public JobApplication findById(Long id) {
-        return jobApplicationRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Job application not found: " + id));
+        JobApplication application = jobApplicationRepository.findByIdWithDetails(id);
+        if (application == null) {
+            throw new NoSuchElementException("Job application not found: " + id);
+        }
+        return application;
     }
 
     @Override
@@ -43,7 +46,7 @@ public class JobApplicationServiceImpl implements JobApplicationService {
                 .orElseThrow(() -> new NoSuchElementException("User not found: "
                         + requestDto.getUserId()));
 
-        Job job = jobRepository.findById(requestDto.getJobId())
+        Job job = jobRepository.findByIdWithRequiredSkills(requestDto.getJobId())
                 .orElseThrow(() -> new NoSuchElementException("Job not found: "
                         + requestDto.getJobId()));
 
@@ -66,13 +69,13 @@ public class JobApplicationServiceImpl implements JobApplicationService {
     @Override
     @Transactional
     public JobApplication updateStatus(Long id, Status newStatus) {
-        JobApplication application = jobApplicationRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Job application not found: " + id));
+        JobApplication application = jobApplicationRepository.findByIdWithDetails(id);
+        if (application == null) {
+            throw new NoSuchElementException("Job application not found: " + id);
+        }
 
-        JobApplicationStatus currentStatus = application.getStatus();
-        currentStatus.setStatus(newStatus);
-
-        jobApplicationStatusRepository.save(currentStatus);
+        application.getStatus().setStatus(newStatus);
+        jobApplicationStatusRepository.save(application.getStatus());
         return application;
     }
 

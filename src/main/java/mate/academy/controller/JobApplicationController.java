@@ -13,6 +13,7 @@ import mate.academy.model.JobApplication;
 import mate.academy.service.JobApplicationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,6 +48,7 @@ public class JobApplicationController {
     }
 
     @Operation(summary = "Create a new job application")
+    @PreAuthorize("hasRole('ROLE_USER')")
     @PostMapping
     public ResponseEntity<JobApplicationDto> create(@RequestBody
                                                         JobApplicationRequestDto requestDto) {
@@ -56,6 +58,7 @@ public class JobApplicationController {
     }
 
     @Operation(summary = "Update job application status")
+    @PreAuthorize("hasRole('ROLE_USER')")
     @PutMapping("/{id}")
     public ResponseEntity<JobApplicationDto> updateStatus(
             @PathVariable Long id,

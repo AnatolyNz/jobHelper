@@ -10,7 +10,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.LocalDateTime;
 import java.util.List;
 import mate.academy.dto.JobApplicationDto;
 import mate.academy.dto.JobApplicationRequestDto;
@@ -20,6 +19,7 @@ import mate.academy.model.Job;
 import mate.academy.model.JobApplication;
 import mate.academy.model.JobApplicationStatus;
 import mate.academy.model.JobApplicationStatus.Status;
+import mate.academy.model.Skill;
 import mate.academy.model.User;
 import mate.academy.service.JobApplicationService;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,89 +46,93 @@ class JobApplicationControllerTest {
 
     private ObjectMapper objectMapper;
 
+    private Job job;
+    private User user;
+    private JobApplicationStatus status;
+    private JobApplication jobApplication;
+    private JobApplicationDto dto;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         mockMvc = MockMvcBuilders.standaloneSetup(jobApplicationController).build();
         objectMapper = new ObjectMapper();
-    }
 
-    @Test
-    void getUserApplications_ShouldReturnList() throws Exception {
-        User user = new User();
+        user = new User();
         user.setId(1L);
 
-        Job job = new Job();
+        job = new Job();
         job.setId(100L);
         job.setTitle("Backend Developer");
         job.setCompany("Mate Academy");
+        job.setLocation("Kyiv");
+        job.setWorkFormat(Job.WorkFormat.Віддалений);
+        job.setRequiredSkills(List.of(new Skill("Java"), new Skill("Spring")));
 
-        JobApplicationStatus status = new JobApplicationStatus();
+        status = new JobApplicationStatus();
         status.setStatus(Status.PENDING);
 
-        JobApplication jobApplication = new JobApplication();
+        jobApplication = new JobApplication();
         jobApplication.setId(1L);
         jobApplication.setUser(user);
         jobApplication.setJob(job);
         jobApplication.setStatus(status);
 
-        JobApplicationDto jobApplicationDto = new JobApplicationDto();
-        jobApplicationDto.setId(1L);
-        jobApplicationDto.setUserId(1L);
-        jobApplicationDto.setJobId(100L);
-        jobApplicationDto.setJobTitle("Backend Developer");
-        jobApplicationDto.setCompany("Mate Academy");
-        jobApplicationDto.setStatus("PENDING");
-        jobApplicationDto.setAppliedAt(LocalDateTime.of(2025, 9, 19, 12, 0));
+        dto = new JobApplicationDto();
+        dto.setId(1L);
+        dto.setUserId(user.getId());
+        dto.setJobId(job.getId());
+        dto.setTitle(job.getTitle());
+        dto.setCompany(job.getCompany());
+        dto.setStatus("PENDING");
+        dto.setRequiredSkills(List.of("Java", "Spring"));
+        dto.setWorkFormat("Віддалений");
+    }
 
+    @Test
+    void getUserApplications_ShouldReturnListWithSkillsAndWorkFormat() throws Exception {
         when(jobApplicationService.findByUserId(1L)).thenReturn(List.of(jobApplication));
-        when(jobApplicationMapper.toDto(jobApplication)).thenReturn(jobApplicationDto);
+        when(jobApplicationMapper.toDto(jobApplication)).thenReturn(dto);
 
         mockMvc.perform(get("/applications/user/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1L))
                 .andExpect(jsonPath("$[0].userId").value(1L))
                 .andExpect(jsonPath("$[0].jobId").value(100L))
-                .andExpect(jsonPath("$[0].jobTitle").value("Backend Developer"))
+                .andExpect(jsonPath("$[0].title").value("Backend Developer"))
                 .andExpect(jsonPath("$[0].company").value("Mate Academy"))
                 .andExpect(jsonPath("$[0].status").value("PENDING"))
-                .andExpect(jsonPath("$[0].appliedAt").value("2025-09-19T12:00:00"));
+                .andExpect(jsonPath("$[0].requiredSkills[0]").value("Java"))
+                .andExpect(jsonPath("$[0].requiredSkills[1]").value("Spring"))
+                .andExpect(jsonPath("$[0].workFormat").value("Віддалений"));
+    }
+
+    @Test
+    void getById_ShouldReturnApplicationWithSkillsAndWorkFormat() throws Exception {
+        when(jobApplicationService.findById(1L)).thenReturn(jobApplication);
+        when(jobApplicationMapper.toDto(jobApplication)).thenReturn(dto);
+
+        mockMvc.perform(get("/applications/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.userId").value(1L))
+                .andExpect(jsonPath("$.jobId").value(100L))
+                .andExpect(jsonPath("$.title").value("Backend Developer"))
+                .andExpect(jsonPath("$.company").value("Mate Academy"))
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.requiredSkills[0]").value("Java"))
+                .andExpect(jsonPath("$.requiredSkills[1]").value("Spring"))
+                .andExpect(jsonPath("$.workFormat").value("Віддалений"));
     }
 
     @Test
     void create_ShouldReturnCreatedApplication() throws Exception {
         JobApplicationRequestDto requestDto = new JobApplicationRequestDto();
-        requestDto.setUserId(1L);
-        requestDto.setJobId(100L);
-
-        User user = new User();
-        user.setId(1L);
-
-        Job job = new Job();
-        job.setId(100L);
-        job.setTitle("Backend Developer");
-        job.setCompany("Mate Academy");
-
-        JobApplicationStatus status = new JobApplicationStatus();
-        status.setStatus(Status.PENDING);
-
-        JobApplication jobApplication = new JobApplication();
-        jobApplication.setId(1L);
-        jobApplication.setUser(user);
-        jobApplication.setJob(job);
-        jobApplication.setStatus(status);
-
-        JobApplicationDto jobApplicationDto = new JobApplicationDto();
-        jobApplicationDto.setId(1L);
-        jobApplicationDto.setUserId(1L);
-        jobApplicationDto.setJobId(100L);
-        jobApplicationDto.setJobTitle("Backend Developer");
-        jobApplicationDto.setCompany("Mate Academy");
-        jobApplicationDto.setStatus("PENDING");
-        jobApplicationDto.setAppliedAt(LocalDateTime.of(2025, 9, 19, 12, 0));
+        requestDto.setUserId(user.getId());
+        requestDto.setJobId(job.getId());
 
         when(jobApplicationService.create(requestDto)).thenReturn(jobApplication);
-        when(jobApplicationMapper.toDto(jobApplication)).thenReturn(jobApplicationDto);
+        when(jobApplicationMapper.toDto(jobApplication)).thenReturn(dto);
 
         mockMvc.perform(post("/applications")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -137,42 +141,37 @@ class JobApplicationControllerTest {
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.userId").value(1L))
                 .andExpect(jsonPath("$.jobId").value(100L))
-                .andExpect(jsonPath("$.jobTitle").value("Backend Developer"))
+                .andExpect(jsonPath("$.title").value("Backend Developer"))
                 .andExpect(jsonPath("$.company").value("Mate Academy"))
                 .andExpect(jsonPath("$.status").value("PENDING"))
-                .andExpect(jsonPath("$.appliedAt").value("2025-09-19T12:00:00"));
+                .andExpect(jsonPath("$.requiredSkills[0]").value("Java"))
+                .andExpect(jsonPath("$.requiredSkills[1]").value("Spring"))
+                .andExpect(jsonPath("$.workFormat").value("Віддалений"));
     }
 
     @Test
     void updateStatus_ShouldReturnUpdatedApplication() throws Exception {
         JobApplicationUpdateDto updateDto = new JobApplicationUpdateDto();
-        updateDto.setStatus(Status.HIRED); // use existing enum value
+        updateDto.setStatus(Status.HIRED);
 
-        User user = new User();
-        user.setId(1L);
-
-        Job job = new Job();
-        job.setId(100L);
-        job.setTitle("Backend Developer");
-        job.setCompany("Mate Academy");
-
-        JobApplicationStatus status = new JobApplicationStatus();
-        status.setStatus(Status.HIRED); // existing enum
+        JobApplicationStatus newStatus = new JobApplicationStatus();
+        newStatus.setStatus(Status.HIRED);
 
         JobApplication updatedApplication = new JobApplication();
         updatedApplication.setId(1L);
         updatedApplication.setUser(user);
         updatedApplication.setJob(job);
-        updatedApplication.setStatus(status);
+        updatedApplication.setStatus(newStatus);
 
         JobApplicationDto updatedDto = new JobApplicationDto();
         updatedDto.setId(1L);
-        updatedDto.setUserId(1L);
-        updatedDto.setJobId(100L);
-        updatedDto.setJobTitle("Backend Developer");
-        updatedDto.setCompany("Mate Academy");
+        updatedDto.setUserId(user.getId());
+        updatedDto.setJobId(job.getId());
+        updatedDto.setTitle(job.getTitle());
+        updatedDto.setCompany(job.getCompany());
         updatedDto.setStatus("HIRED");
-        updatedDto.setAppliedAt(LocalDateTime.of(2025, 9, 19, 12, 0));
+        updatedDto.setRequiredSkills(List.of("Java", "Spring"));
+        updatedDto.setWorkFormat("Віддалений");
 
         when(jobApplicationService.updateStatus(1L, updateDto.getStatus()))
                 .thenReturn(updatedApplication);
@@ -182,7 +181,10 @@ class JobApplicationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("HIRED"));
+                .andExpect(jsonPath("$.status").value("HIRED"))
+                .andExpect(jsonPath("$.requiredSkills[0]").value("Java"))
+                .andExpect(jsonPath("$.requiredSkills[1]").value("Spring"))
+                .andExpect(jsonPath("$.workFormat").value("Віддалений"));
     }
 
     @Test
