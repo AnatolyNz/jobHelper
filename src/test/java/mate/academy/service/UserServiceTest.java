@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import java.util.Set;
 import mate.academy.dto.UserRegistrationRequestDto;
 import mate.academy.dto.UserResponseDto;
 import mate.academy.exception.EntityNotFoundException;
@@ -28,6 +29,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
+
     @Mock private UserRepository userRepository;
     @Mock private RoleRepository roleRepository;
     @Mock private PasswordEncoder passwordEncoder;
@@ -56,7 +58,7 @@ public class UserServiceTest {
 
     @Test
     @DisplayName("Should register new user when email is not taken")
-    void register_ValidRequest_ShouldReturnUserResponseDto() {
+    void register_ValidRequest_ShouldReturnUserResponseDto() throws RegistrationException {
         User savedUser = new User();
         savedUser.setId(1L);
         savedUser.setEmail(request.getEmail());
@@ -91,5 +93,34 @@ public class UserServiceTest {
         when(roleRepository.findByRoleName(Role.RoleName.USER)).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () -> userService.register(request));
+    }
+
+    @Test
+    @DisplayName("Should return UserResponseDto when user found by email")
+    void getByEmail_ExistingUser_ShouldReturnUserResponseDto() {
+        User userWithRoles = new User();
+        userWithRoles.setEmail(request.getEmail());
+        userWithRoles.setRoles(Set.of(role));
+
+        UserResponseDto expectedResponse = new UserResponseDto();
+        expectedResponse.setEmail(request.getEmail());
+
+        when(userRepository.findByEmailWithRoles(request.getEmail()))
+                .thenReturn(Optional.of(userWithRoles));
+        when(userMapper.toResponseDto(userWithRoles))
+                .thenReturn(expectedResponse);
+
+        UserResponseDto actual = userService.getByEmail(request.getEmail());
+
+        assertEquals(expectedResponse, actual);
+    }
+
+    @Test
+    @DisplayName("Should throw EntityNotFoundException when user not found by email")
+    void getByEmail_NonExistingUser_ShouldThrowException() {
+        when(userRepository.findByEmailWithRoles(request.getEmail())).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> userService
+                .getByEmail(request.getEmail()));
     }
 }

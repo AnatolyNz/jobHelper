@@ -3,13 +3,16 @@ package mate.academy.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import mate.academy.dto.ResumeDto;
 import mate.academy.exception.EntityNotFoundException;
 import mate.academy.mapper.ResumeMapper;
@@ -30,6 +33,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @ExtendWith(MockitoExtension.class)
 public class ResumeServiceTest {
+
     @Mock private ResumeMapper resumeMapper;
     @Mock private ResumeRepository resumeRepository;
     @Mock private SkillRepository skillRepository;
@@ -47,6 +51,7 @@ public class ResumeServiceTest {
         Resume result = resumeService.findById(1L);
 
         assertEquals(resume, result);
+        verify(resumeRepository, times(1)).findByIdWithAllDetails(1L);
     }
 
     @Test
@@ -55,6 +60,7 @@ public class ResumeServiceTest {
         when(resumeRepository.findByIdWithAllDetails(1L)).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () -> resumeService.findById(1L));
+        verify(resumeRepository, times(1)).findByIdWithAllDetails(1L);
     }
 
     @Test
@@ -83,8 +89,18 @@ public class ResumeServiceTest {
     }
 
     @Test
+    @DisplayName("Should throw RuntimeException when file bytes cannot be read")
+    void saveFile_IoException_ShouldThrowRuntimeException() throws IOException {
+        User user = new User();
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(multipartFile.getBytes()).thenThrow(IOException.class);
+
+        assertThrows(RuntimeException.class, () -> resumeService.save(multipartFile, 1L));
+    }
+
+    @Test
     @DisplayName("Should save resume from ResumeDto with extracted skills")
-    void saveResumeDto_ShouldReturnSavedResume() {
+    void saveResumeDto_WithSkills_ShouldReturnSavedResume() {
         ResumeDto resumeDto = new ResumeDto();
         resumeDto.setUserId(1L);
         resumeDto.setExtractedSkills(List.of("Java", "Spring"));
@@ -94,13 +110,48 @@ public class ResumeServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(new User()));
         when(skillRepository.findByNameIgnoreCase("java")).thenReturn(Optional.empty());
         when(skillRepository.findByNameIgnoreCase("spring")).thenReturn(Optional.empty());
-        when(skillRepository.save(any(Skill.class))).thenAnswer(invocation ->
-                invocation.getArgument(0));
+        when(skillRepository.save(any(Skill.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
         when(resumeRepository.save(resume)).thenReturn(resume);
 
         Resume result = resumeService.save(resumeDto);
 
         assertEquals(resume, result);
         assertFalse(resume.getSkills().isEmpty());
+
+        // Ensure skills are normalized to lowercase
+        Set<String> skillNames = resume.getSkills().stream().map(Skill::getName)
+                .collect(java.util.stream.Collectors.toSet());
+        assertTrue(skillNames.contains("java"));
+        assertTrue(skillNames.contains("spring"));
+    }
+
+    @Test
+    @DisplayName("Should save resume from ResumeDto without skills when none extracted")
+    void saveResumeDto_NoSkills_ShouldReturnSavedResume() {
+        ResumeDto resumeDto = new ResumeDto();
+        resumeDto.setUserId(1L);
+        resumeDto.setExtractedSkills(null);
+        Resume resume = new Resume();
+
+        when(resumeMapper.toEntity(resumeDto)).thenReturn(resume);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(new User()));
+        when(resumeRepository.save(resume)).thenReturn(resume);
+
+        Resume result = resumeService.save(resumeDto);
+
+        assertEquals(resume, result);
+        assertTrue(resume.getSkills() == null || resume.getSkills().isEmpty());
+    }
+
+    @Test
+    @DisplayName("Should throw EntityNotFoundException when user not found for ResumeDto")
+    void saveResumeDto_UserNotFound_ShouldThrowException() {
+        ResumeDto resumeDto = new ResumeDto();
+        resumeDto.setUserId(1L);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> resumeService.save(resumeDto));
     }
 }

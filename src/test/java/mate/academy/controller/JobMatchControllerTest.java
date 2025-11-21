@@ -54,7 +54,6 @@ class JobMatchControllerTest {
     @WithMockUser(username = "testuser", roles = {"USER"})
     @DisplayName("Find matching jobs for resume - should return job matches")
     void getMatchingJobs_ReturnsList() throws Exception {
-        // Perform GET request as a mock authenticated user
         MvcResult result = mockMvc.perform(get("/job-matches/resume/{id}", RESUME_ID)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

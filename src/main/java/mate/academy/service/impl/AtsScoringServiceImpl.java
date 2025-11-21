@@ -14,23 +14,23 @@ import org.springframework.stereotype.Service;
 public class AtsScoringServiceImpl implements AtsScoringService {
 
     private static final List<String> SECTIONS_EN = List.of(
-            "Experience", "Education", "Skills", "Contact", "Summary",
-            "Projects", "Previous Experience", "Additional Education", "Achievements"
+            "experience", "education", "skills", "contact", "summary",
+            "projects", "previous experience", "additional education", "achievements"
     );
 
     private static final List<String> SECTIONS_UA = List.of(
-            "Досвід", "Освіта", "Навички", "Контакт", "Резюме",
-            "Проекти", "Попередній досвід", "Додаткова освіта", "Досягнення"
+            "досвід", "освіта", "навички", "контакт", "резюме",
+            "проекти", "попередній досвід", "додаткова освіта", "досягнення"
     );
 
     private static final List<String> KEYWORDS_EN = List.of(
-            "Developed", "Led", "Managed", "Achieved", "Designed", "Built",
-            "Implemented", "Tested", "Deployed", "Contributed", "Prepared", "Participated"
+            "developed", "led", "managed", "achieved", "designed", "built",
+            "implemented", "tested", "deployed", "contributed", "prepared", "participated"
     );
 
     private static final List<String> KEYWORDS_UA = List.of(
-            "Розроблено", "Керовано", "Досягнуто", "Спроектовано", "Створено", "Збудовано",
-            "Впроваджено", "Протестовано", "Розгорнуто", "Підготовлено", "Брав участь"
+            "розроблено", "керовано", "досягнуто", "спроектовано", "створено", "збудовано",
+            "впроваджено", "протестовано", "розгорнуто", "підготовлено", "брав", "участь"
     );
 
     @Override
@@ -41,91 +41,65 @@ public class AtsScoringServiceImpl implements AtsScoringService {
     @Override
     public AtsScoreResult scoreDetailed(String text) {
         if (text == null || text.isBlank()) {
-            return new AtsScoreResult(0, 0,
-                    0, List.of(), List.of(),
-                    List.of(), List.of(), "UNKNOWN");
+            return emptyResult();
         }
 
-        // ✅ Normalize text
-        String normalized = text.toLowerCase()
-                .replace("", " ")
-                .replace("|", " ")
-                .replaceAll("[^a-zа-я0-9\\s]", " ")
-                .replaceAll("\\s+", " ")
-                .trim();
+        // Normalize lowercase text
+        String normalized = normalize(text);
 
-        // ✅ Use Stream + Collectors.toSet() (fixes IllegalArgumentException)
+        // unique words set
         Set<String> words = Stream.of(normalized.split("\\s+"))
                 .collect(Collectors.toSet());
 
-        // Count sections and keywords
-        long secEn = SECTIONS_EN.stream()
-                .map(String::toLowerCase)
-                .filter(normalized::contains)
-                .count();
+        // Count English
+        long secEn = countContains(normalized, SECTIONS_EN);
+        long keyEn = countWords(words, KEYWORDS_EN);
 
-        long secUa = SECTIONS_UA.stream()
-                .map(String::toLowerCase)
-                .filter(normalized::contains)
-                .count();
-
-        long keyEn = KEYWORDS_EN.stream()
-                .map(String::toLowerCase)
-                .filter(words::contains)
-                .count();
-
-        long keyUa = KEYWORDS_UA.stream()
-                .map(String::toLowerCase)
-                .filter(words::contains)
-                .count();
+        // Count Ukrainian
+        long secUa = countContains(normalized, SECTIONS_UA);
+        long keyUa = countWords(words, KEYWORDS_UA);
 
         // Detect language
-        String language = detectLanguage(secEn, secUa, keyEn, keyUa);
+        String lang = detectLanguage(secEn, secUa, keyEn, keyUa);
 
-        // Choose base lists depending on language
-        List<String> baseSections;
-        List<String> baseKeywords;
+        // Pick base lists according to detected language
+        List<String> baseSections = switch (lang) {
+            case "UA" -> SECTIONS_UA;
+            case "MIXED" -> mergeLists(SECTIONS_EN, SECTIONS_UA);
+            default -> SECTIONS_EN;
+        };
 
-        switch (language) {
-            case "UA" -> {
-                baseSections = SECTIONS_UA;
-                baseKeywords = KEYWORDS_UA;
-            }
-            case "MIXED" -> {
-                baseSections = mergeLists(SECTIONS_EN, SECTIONS_UA);
-                baseKeywords = mergeLists(KEYWORDS_EN, KEYWORDS_UA);
-            }
-            default -> {
-                baseSections = SECTIONS_EN;
-                baseKeywords = KEYWORDS_EN;
-            }
-        }
+        List<String> baseKeywords = switch (lang) {
+            case "UA" -> KEYWORDS_UA;
+            case "MIXED" -> mergeLists(KEYWORDS_EN, KEYWORDS_UA);
+            default -> KEYWORDS_EN;
+        };
 
-        // Calculate score fractions
-        double sectionFrac = getFraction(language, secEn, secUa,
+        // Fractions
+        double sectionFrac = getFraction(lang, secEn, secUa,
                 SECTIONS_EN.size(), SECTIONS_UA.size());
-        double keywordFrac = getFraction(language, keyEn, keyUa,
+        double keywordFrac = getFraction(lang, keyEn, keyUa,
                 KEYWORDS_EN.size(), KEYWORDS_UA.size());
 
-        double sectionScore = sectionFrac * 50.0;
-        double keywordScore = Math.min(keywordFrac * 50.0, 50.0);
+        double sectionScore = sectionFrac * 50;
+        double keywordScore = Math.min(keywordFrac * 50, 50);
         double totalScore = sectionScore + keywordScore;
 
-        // Build found/missing lists
+        // Found / Missing (always lowercase!)
         List<String> foundSections = baseSections.stream()
-                .filter(s -> normalized.contains(s.toLowerCase()))
+                .filter(s -> normalized.contains(s))
                 .collect(Collectors.toList());
 
         List<String> missingSections = baseSections.stream()
-                .filter(s -> !normalized.contains(s.toLowerCase()))
+                .filter(s -> !normalized.contains(s))
                 .collect(Collectors.toList());
 
         List<String> foundKeywords = baseKeywords.stream()
-                .filter(k -> words.contains(k.toLowerCase()))
+                .filter(words::contains)
                 .collect(Collectors.toList());
 
         List<String> missingKeywords = baseKeywords.stream()
-                .filter(k -> !words.contains(k.toLowerCase()))
+                .filter(k -> !words.contains(k))
                 .collect(Collectors.toList());
 
         return new AtsScoreResult(
@@ -136,32 +110,62 @@ public class AtsScoringServiceImpl implements AtsScoringService {
                 missingSections,
                 foundKeywords,
                 missingKeywords,
-                language
+                lang
         );
     }
 
-    private String detectLanguage(long secEn, long secUa, long keyEn, long keyUa) {
-        boolean hasEn = (secEn + keyEn) > 0;
-        boolean hasUa = (secUa + keyUa) > 0;
+    private String normalize(String text) {
+        return text.toLowerCase()
+                .replace("", " ")
+                .replace("|", " ")
+                .replaceAll("[^a-zа-яіїєґ0-9\\s]", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+    }
 
-        if (hasEn && !hasUa) {
+    private AtsScoreResult emptyResult() {
+        return new AtsScoreResult(
+                0, 0, 0,
+                List.of(), List.of(),
+                List.of(), List.of(),
+                "UNKNOWN"
+        );
+    }
+
+    private long countContains(String text, List<String> patterns) {
+        return patterns.stream()
+                .filter(text::contains)
+                .count();
+    }
+
+    private long countWords(Set<String> words, List<String> dict) {
+        return dict.stream()
+                .filter(words::contains)
+                .count();
+    }
+
+    private String detectLanguage(long secEn, long secUa, long keyEn, long keyUa) {
+        boolean en = (secEn + keyEn) > 0;
+        boolean ua = (secUa + keyUa) > 0;
+
+        if (en && !ua) {
             return "EN";
         }
-        if (!hasEn && hasUa) {
+        if (!en && ua) {
             return "UA";
         }
-        if (hasEn && hasUa) {
+        if (en && ua) {
             return "MIXED";
         }
         return "UNKNOWN";
     }
 
-    private double getFraction(String language, long enCount,
-                               long uaCount, int enSize, int uaSize) {
-        return switch (language) {
-            case "EN" -> enCount / (double) enSize;
-            case "UA" -> uaCount / (double) uaSize;
-            case "MIXED" -> ((enCount / (double) enSize) + (uaCount / (double) uaSize)) / 2.0;
+    private double getFraction(String lang, long enCount, long uaCount,
+                               int sizeEn, int sizeUa) {
+        return switch (lang) {
+            case "EN" -> enCount / (double) sizeEn;
+            case "UA" -> uaCount / (double) sizeUa;
+            case "MIXED" -> ((enCount / (double) sizeEn) + (uaCount / (double) sizeUa)) / 2.0;
             default -> 0.0;
         };
     }

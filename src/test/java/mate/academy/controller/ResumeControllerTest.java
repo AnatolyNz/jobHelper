@@ -5,6 +5,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -82,9 +84,22 @@ class ResumeControllerTest {
 
         mockMvc.perform(get("/resumes/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(resumeDto.getId()))
-                .andExpect(jsonPath("$.fileName").value(resumeDto.getFileName()))
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.fileName").value("test.pdf"))
                 .andExpect(jsonPath("$.extractedSkills[0]").value("Java"));
+    }
+
+    @Test
+    @DisplayName("GET /resumes/{id}/file - should download stored file")
+    void downloadResumeFile_ReturnsFile() throws Exception {
+        when(resumeService.findById(1L)).thenReturn(resume);
+
+        mockMvc.perform(get("/resumes/1/file"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition",
+                        "attachment; filename=\"test.pdf\""))
+                .andExpect(content().contentType("application/pdf"))
+                .andExpect(content().bytes(new byte[]{1, 2, 3}));
     }
 
     @Test
@@ -93,18 +108,16 @@ class ResumeControllerTest {
         when(resumeService.save(any(ResumeDto.class))).thenReturn(resume);
         when(resumeMapper.toDto(resume)).thenReturn(resumeDto);
 
-        String jsonRequest = objectMapper.writeValueAsString(resumeDto);
-
         mockMvc.perform(post("/resumes")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonRequest))
+                        .content(objectMapper.writeValueAsString(resumeDto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(resumeDto.getId()))
-                .andExpect(jsonPath("$.fileName").value(resumeDto.getFileName()));
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.fileName").value("test.pdf"));
     }
 
     @Test
-    @DisplayName("POST /resumes/upload - should upload file and return OK with JSON")
+    @DisplayName("POST /resumes/upload - should upload file and return JSON response")
     void uploadResume_ReturnsOk() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -113,7 +126,7 @@ class ResumeControllerTest {
                 new byte[]{1, 2, 3}
         );
 
-        when(resumeParserService.extractTextFromFileData(any())).thenReturn("Java, Spring");
+        when(resumeParserService.extractTextFromFileData(any())).thenReturn("Java Spring");
         when(resumeParserService.extractSkills(any())).thenReturn(List.of("Java", "Spring"));
         when(resumeService.save(any(ResumeDto.class))).thenReturn(resume);
 
@@ -121,7 +134,7 @@ class ResumeControllerTest {
                         .file(file)
                         .param("userId", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.resumeId").value(resume.getId()))
+                .andExpect(jsonPath("$.resumeId").value(1L))
                 .andExpect(jsonPath("$.message").value("Resume uploaded successfully"))
                 .andExpect(jsonPath("$.skillsExtracted[0]").value("Java"))
                 .andExpect(jsonPath("$.skillsExtracted[1]").value("Spring"));

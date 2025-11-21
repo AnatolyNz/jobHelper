@@ -1,13 +1,13 @@
 package mate.academy.service.impl;
 
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import mate.academy.dto.JobMatchDto;
 import mate.academy.exception.EntityNotFoundException;
 import mate.academy.model.Job;
 import mate.academy.model.Resume;
-import mate.academy.model.Skill;
 import mate.academy.repository.JobRepository;
 import mate.academy.repository.ResumeRepository;
 import mate.academy.service.JobMatchService;
@@ -31,42 +31,50 @@ public class JobMatchServiceImpl implements JobMatchService {
         Resume resume = resumeRepository.findByIdWithSkills(resumeId)
                 .orElseThrow(() -> new EntityNotFoundException("Resume not found: " + resumeId));
 
+        Set<String> resumeSkillNames = resume.getSkills().stream()
+                .map(skill -> skill.getName().toLowerCase())
+                .collect(Collectors.toSet());
+
         if (jobId != null) {
             Job job = jobRepository.findByIdWithRequiredSkills(jobId)
                     .orElseThrow(() -> new EntityNotFoundException("Job not found: " + jobId));
-            return List.of(calculateJobMatch(resume, job));
+            return List.of(calculateJobMatch(resume.getId(), resumeSkillNames, job));
         }
 
-        try (Stream<Job> jobStream = streamAllJobs()) {
-            return jobStream.map(job -> calculateJobMatch(resume, job))
-                    .toList(); // Java 16+, use Collectors.toList() if older
-        }
+        List<Job> jobs = findAllJobs();
+        return jobs.stream()
+                .map(job -> calculateJobMatch(resume.getId(), resumeSkillNames, job))
+                .toList();
     }
 
-    private Stream<Job> streamAllJobs() {
-        return Stream.iterate(0, page -> page + 1)
-                .map(page -> jobRepository.findAllWithRequiredSkills(PageRequest
-                        .of(page, PAGE_SIZE)))
-                .takeWhile(page -> !page.isEmpty())
-                .flatMap(Page::stream);
+    /**
+     * Безпечне отримання всіх вакансій через пагінацію
+     */
+    private List<Job> findAllJobs() {
+        int page = 0;
+        List<Job> allJobs = new java.util.ArrayList<>();
+        Page<Job> jobPage;
+        do {
+            jobPage = jobRepository.findAllWithRequiredSkills(PageRequest.of(page++, PAGE_SIZE));
+            allJobs.addAll(jobPage.getContent());
+        } while (!jobPage.isEmpty());
+        return allJobs;
     }
 
-    private JobMatchDto calculateJobMatch(Resume resume, Job job) {
-        List<Skill> resumeSkills = resume.getSkills().stream().toList();
-        List<Skill> requiredSkills = job.getRequiredSkills();
-
-        long matched = resumeSkills.stream()
-                .filter(rs -> requiredSkills.stream()
-                        .anyMatch(js -> js.getName().equalsIgnoreCase(rs.getName())))
+    private JobMatchDto calculateJobMatch(Long resumeId, Set<String> resumeSkillNames, Job job) {
+        long matchedCount = job.getRequiredSkills().stream()
+                .map(skill -> skill.getName().toLowerCase())
+                .filter(resumeSkillNames::contains)
                 .count();
 
-        double matchScore = requiredSkills.isEmpty() ? 0.0 : (matched * 100.0
-                / requiredSkills.size());
+        double matchScore = job.getRequiredSkills().isEmpty()
+                ? 0.0
+                : (matchedCount * 100.0 / job.getRequiredSkills().size());
 
         JobMatchDto dto = new JobMatchDto();
+        dto.setResumeId(resumeId);
         dto.setJobId(job.getId());
         dto.setJobTitle(job.getTitle());
-        dto.setResumeId(resume.getId());
         dto.setMatchScore(matchScore);
         return dto;
     }

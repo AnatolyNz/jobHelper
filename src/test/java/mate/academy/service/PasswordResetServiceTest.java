@@ -28,6 +28,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
 public class PasswordResetServiceTest {
+
     @Mock private UserRepository userRepository;
     @Mock private PasswordResetTokenRepository tokenRepository;
     @Mock private PasswordEncoder passwordEncoder;
@@ -90,5 +91,50 @@ public class PasswordResetServiceTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> passwordResetService.resetPassword(token.getToken(), "newPass"));
+    }
+
+    @Test
+    @DisplayName("Should throw exception for invalid token")
+    void resetPassword_InvalidToken_ShouldThrowException() {
+        when(tokenRepository.findByTokenWithUser("invalid")).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class,
+                () -> passwordResetService.resetPassword("invalid", "newPass"));
+    }
+
+    @Test
+    @DisplayName("Should verify valid token without exception")
+    void verifyPasswordResetToken_ValidToken_ShouldPass() {
+        PasswordResetToken token = new PasswordResetToken();
+        token.setToken("valid");
+        token.setExpiryDate(LocalDateTime.now().plusMinutes(10));
+        token.setUser(new User());
+
+        when(tokenRepository.findByTokenWithUser("valid")).thenReturn(Optional.of(token));
+
+        passwordResetService.verifyPasswordResetToken("valid");
+    }
+
+    @Test
+    @DisplayName("Should throw exception for expired token verification")
+    void verifyPasswordResetToken_ExpiredToken_ShouldThrowException() {
+        PasswordResetToken token = new PasswordResetToken();
+        token.setToken("expired");
+        token.setExpiryDate(LocalDateTime.now().minusMinutes(1));
+        token.setUser(new User());
+
+        when(tokenRepository.findByTokenWithUser("expired")).thenReturn(Optional.of(token));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> passwordResetService.verifyPasswordResetToken("expired"));
+    }
+
+    @Test
+    @DisplayName("Should throw exception for invalid token verification")
+    void verifyPasswordResetToken_InvalidToken_ShouldThrowException() {
+        when(tokenRepository.findByTokenWithUser("invalid")).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class,
+                () -> passwordResetService.verifyPasswordResetToken("invalid"));
     }
 }

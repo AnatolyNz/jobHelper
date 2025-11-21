@@ -2,6 +2,7 @@ package mate.academy.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -14,6 +15,8 @@ import mate.academy.dto.UserLoginRequestDto;
 import mate.academy.dto.UserLoginResponseDto;
 import mate.academy.dto.UserRegistrationRequestDto;
 import mate.academy.dto.UserResponseDto;
+import mate.academy.dto.VerifyCodeRequestDto;
+import mate.academy.exception.EntityNotFoundException;
 import mate.academy.exception.RegistrationException;
 import mate.academy.security.AuthenticationService;
 import mate.academy.service.PasswordResetService;
@@ -147,5 +150,53 @@ class AuthenticationControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Password successfully reset."));
+    }
+
+    @Test
+    void verifyCode_ShouldReturnOk() throws Exception {
+        VerifyCodeRequestDto request = new VerifyCodeRequestDto("validToken");
+
+        doNothing().when(passwordResetService)
+                .verifyPasswordResetToken("validToken");
+
+        mockMvc.perform(post("/auth/verify-code")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(request)))
+                .andExpect(status().isOk())
+                .andExpect(content().json("{\"message\":\"Code verified\"}"));
+    }
+
+    @Test
+    void verifyCode_ShouldReturnNotFound() throws Exception {
+        VerifyCodeRequestDto request = new VerifyCodeRequestDto("badToken");
+
+        doThrow(new EntityNotFoundException("Not found"))
+                .when(passwordResetService)
+                .verifyPasswordResetToken(any());
+
+        mockMvc.perform(post("/auth/verify-code")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(content().json("{\"message\":\"Invalid verification code\"}"));
+    }
+
+    @Test
+    void verifyCode_ShouldReturnBadRequest_WhenExpired() throws Exception {
+        VerifyCodeRequestDto request = new VerifyCodeRequestDto("expiredToken");
+
+        doThrow(new IllegalArgumentException("Expired"))
+                .when(passwordResetService)
+                .verifyPasswordResetToken(any());
+
+        mockMvc.perform(post("/auth/verify-code")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().json("{\"message\":\"Verification code expired\"}"));
+    }
+
+    private String json(Object obj) throws Exception {
+        return objectMapper.writeValueAsString(obj);
     }
 }

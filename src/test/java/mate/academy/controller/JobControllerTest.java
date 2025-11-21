@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -65,6 +66,10 @@ class JobControllerTest {
         jobDto.setLocation("Remote");
     }
 
+    private String json(Object obj) throws Exception {
+        return objectMapper.writeValueAsString(obj);
+    }
+
     @Test
     @DisplayName("GET /jobs - should return list of jobs")
     void getAllJobs_ReturnsList() throws Exception {
@@ -73,8 +78,8 @@ class JobControllerTest {
 
         mockMvc.perform(get("/jobs"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(jobDto.getId()))
-                .andExpect(jsonPath("$[0].title").value(jobDto.getTitle()));
+                .andExpect(jsonPath("$[0].id").value(1L))
+                .andExpect(jsonPath("$[0].title").value("Backend Developer"));
     }
 
     @Test
@@ -85,8 +90,8 @@ class JobControllerTest {
 
         mockMvc.perform(get("/jobs/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(jobDto.getId()))
-                .andExpect(jsonPath("$.title").value(jobDto.getTitle()));
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.title").value("Backend Developer"));
     }
 
     @Test
@@ -95,14 +100,40 @@ class JobControllerTest {
         when(jobService.save(any(JobDto.class))).thenReturn(job);
         when(jobMapper.toDto(job)).thenReturn(jobDto);
 
-        String jsonRequest = objectMapper.writeValueAsString(jobDto);
-
         mockMvc.perform(post("/jobs")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonRequest))
+                        .content(json(jobDto)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(jobDto.getId()))
-                .andExpect(jsonPath("$.title").value(jobDto.getTitle()));
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.title").value("Backend Developer"));
+    }
+
+    @Test
+    @DisplayName("PUT /jobs/{id} - should update job and return DTO")
+    void updateJob_ReturnsUpdatedJobDto() throws Exception {
+        Job updatedJob = new Job();
+        updatedJob.setId(1L);
+        updatedJob.setTitle("Senior Backend Developer");
+        updatedJob.setDescription("Updated desc");
+        updatedJob.setCompany("TechCorp");
+        updatedJob.setLocation("Remote");
+
+        JobDto updatedDto = new JobDto();
+        updatedDto.setId(1L);
+        updatedDto.setTitle("Senior Backend Developer");
+        updatedDto.setDescription("Updated desc");
+        updatedDto.setCompany("TechCorp");
+        updatedDto.setLocation("Remote");
+
+        when(jobService.update(1L, updatedDto)).thenReturn(updatedJob);
+        when(jobMapper.toDto(updatedJob)).thenReturn(updatedDto);
+
+        mockMvc.perform(put("/jobs/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(updatedDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Senior Backend Developer"))
+                .andExpect(jsonPath("$.description").value("Updated desc"));
     }
 
     @Test
