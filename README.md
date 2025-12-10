@@ -1,8 +1,8 @@
-![BookShopImage.jpg](BookShopImage.jpg)
+![JobHelperImage.jpg](JobHelperImage.jpg)
 
 ## Introduction
 
-The book-shop is a Java-based web application built using the Spring Boot framework. It serves as a comprehensive platform for managing books, categories, user registrations, shopping carts, and orders within a bookstore. This project was inspired by the need for an efficient and scalable solution to streamline bookstore operations.
+**JobHelper** is a Java-based web application built using the Spring Boot framework. It provides a comprehensive platform for organizing and managing the job search process. The project was created to offer an efficient, scalable solution that helps users streamline and optimize their job-searching workflow.
 
 ## Technologies Used
 
@@ -18,14 +18,16 @@ The book-shop is a Java-based web application built using the Spring Boot framew
 * **Lombok**: A library to reduce boilerplate code in Java.
 
 ## Functionalities
+
 ### User Management
 
-* User registration with optional shipping address.
+* User registration.
 * Secure user login with JWT-based authentication.
+* Password recovery & reset via email verification code.
 
-**Available endpoints for User Management**
+**Endpoints:**
 
-(for non-authenticated users)
+For non-authenticated users:
 ``` 
 POST: /api/auth/register
 ``` 
@@ -37,8 +39,7 @@ Example of request body to **register**:
   "password": "securePassword123",
   "repeatPassword": "securePassword123",
   "firstName": "John",
-  "lastName": "Doe",
-  "shippingAddress": "123 Main St, City, Country"
+  "lastName": "Doe"
 }
 ```
 ``` 
@@ -52,136 +53,155 @@ Example of request body to **log-in**:
   "password": "securePassword123"
 }
 ```
-
-### Book Management
-
-* Create, retrieve, update, and delete books.
-* Search for books based on various parameters.
-* Associate books with multiple categories.
-
-**Available endpoints for Book Management**
-
-with USER role
 ``` 
-GET: /api/books
-
-GET: /api/books/{id} 
-
-GET: /api/books/search
+POST: /api/auth/forgot-password
 ```
+Example of request body to **forgot-password** for reset link sent to email if account exists.:
 
-with ADMIN role
-``` 
-POST: /api/books/
-
-DELETE: /api/books/{id}
-
-PUT: /api/books/{id}
-
-``` 
-Example of request body to **create new book**:
 ```json
 {
-  "title": "Book title",
-  "author": "Book author",
-  "price": 200, 
-  "description": "Description for book",
-  "coverImage": "Book image",
-  "isbn": "ISBN-123456",
-  "categoryIds": [1, 2]
+  "email": "test444@example.com"
 }
 ```
-If you want to add category to book, you should crate category first, or update book later. Field categoryIds is an optional field.
-
-To update Book you should use same request body as for creation of a new book.
-
-### Category Management
-
-* Create, retrieve, update, and delete book categories.
-
-**Available endpoints for Category Management**
-
-with USER role
 ``` 
-GET: /api/categories
-
-GET: /api/categories/{id}
-
-GET: /api/categories/{id}/books
+POST: /api/auth/reset-password
 ```
+Example of request body to **reset-password**:
 
-with ADMIN role
-``` 
-POST: /api/categories 
-
-PUT: /api/categories/{id}
-
-DELETE: /api/categories/{id}
-```
-Example of request body to **create new category**:
 ```json
 {
-  "name": "Category name",
-  "description": "Category description"
+  "token": "token-here",
+  "newPassword": "new_secure_password123"
 }
 ```
-### Shopping Cart and Order Management
-
-* Add books to the shopping cart.
-* View and manage shopping cart items.
-* Place orders, update order status, and retrieve order details.
-
-**Available endpoints for Shopping Cart Management**
-
-with USER role
-```
-POST: /api/cart
-
-GET: /api/cart
-
-PUT: /api/cart/books/{id}
-
-DELETE: /api/cart/cart-items/{cartItemId}
-```
-Example of request body to **add items in cart**:
-```json
-{
-  "bookId": 1,
-  "quantity": 1
-}
-```
-Example of request body to **update book qty in cart**:
-```json
-{
-"quantity": 1
-}
-```
-**Available endpoints for Order Management**
-
-with USER role
 ``` 
-POST: /api/orders
-
-GET: /api/orders
-
-GET: /api/orders/{orderId}/items
-
-GET: /api/orders/{orderId}/items/{itemId}
+POST: /api/auth/verify-code
 ```
-Example of request body to **post order**:
+Example of request body for **verify-code**:
+
 ```json
 {
-"shippingAddress": "Kyiv, Shevchenko st 23"
+  "token": "token-here received on email"
 }
 ```
-with ADMIN role
-```
-PUT: /api/orders/{id}
+
+### Job Management
+
+* Create, retrieve, update, and delete jobs.
+* Search for jobs based on various parameters.
+
+**Available endpoints for Jobs Management**
+
 ``` 
-Example of request body to **update order status**:
+GET: /api/jobs
+
+GET: /api/jobs/{id} 
+
+POST: /api/jobs
+
+PUT: /api/jobs/{id} 
+
+DELETE: /api/jobs/{id} 
+```
+``` 
+Example of request body to **create new jobs**:
 ```json
 {
-"status": "CANCELED"
+  "title": "Java Developer",
+  "description": "Develop backend microservices",
+  "requiredSkills": ["Java", "Spring Boot", "SQL"],
+  "company": "Tech Corp",
+  "location": "Kyiv",
+  "salary": 5000.00,
+  "workFormat": "Remote"
+}
+```
+
+### Resume Management
+
+* Create, retrieve resume.
+
+**Available endpoints for Resume Management**
+
+``` 
+GET: /api/resumes/{id}
+
+GET: /api/resumes/{id}/file
+
+POST: /api/resumes 
+
+POST: /api/resumes/upload
+
+```
+Example of form-data to **create new resume**:
+```
+file
+userId
+```
+### Job match Management
+
+* Checking if the resume suitability for the job.
+
+**Available endpoints for Job match**
+
+```
+GET: /api/job-matches/resume/{resumeId}
+
+```
+Example of answer for request **get job-match**:
+```json
+{
+  "id": 91,
+  "resumeId": 1,
+  "jobId": 1,
+  "jobTitle": "Java Developer",
+  "matchScore": 33.33333333333333
+
+```
+
+### Job Application Management (Tracker)
+
+* Manage user job applications.
+* CRUD operations for job application tracking.
+
+**Available endpoints for JobsApplication Management**
+
+``` 
+GET: /api/applications/user/{userId}
+
+GET: /api/applications/{id} 
+
+POST: /api/applications
+
+PUT: /api/applications/{id} 
+
+DELETE: /api/applications/{id} 
+```
+``` 
+Example of request body to **create new jobsApplication**:
+```json
+{
+  "userId": 1,
+  "jobId": 35
+}
+```
+### ATS Evaluation Management
+
+* Evaluate resume.
+
+**Available endpoint for JobsApplication Management**
+
+``` 
+GET: /api/ats-evaluation/resume/{resumeId}
+```
+``` 
+Example of request body to **get evaluate**:
+```json
+{
+    "id": 1,
+    "resumeId": 1,
+    "score": 85.0,
+    "feedback": "Looks good for most ATS systems."
 }
 ```
 
@@ -195,11 +215,11 @@ The project follows a modular structure:
 * **dto**: Data Transfer Objects for communication between the client and server.
 * **mapper**: Mapper interfaces for mapping between DTOs and entity models.
 
-Link to a video demonstration of the project - https://drive.google.com/drive/folders/1WkUiHSLxAJwgzelOM4aemBnLmSeOIdyP?usp=sharing
+Link to a video demonstration of the project - https://drive.google.com/file/d/1h1ZPs8Jy5F6MNwBxG_eYCZVF-mMmglmu/view?usp=sharing
 
 ## Setup
 
-To set up and use the Online Book Store, follow these steps:
+To set up and use the jobHelper, follow these steps:
 
 
 1. Clone the repository to your local machine.
@@ -207,6 +227,7 @@ To set up and use the Online Book Store, follow these steps:
 3. Build and run the application using your preferred Java IDE or build tool.
 4. Access the Swagger documentation: http://localhost:8080/swagger-ui.html
    The API uses JWT (JSON Web Tokens) for authentication.
+5. For protected endpoints, authenticate first and pass the JWT token via Authorization: Bearer <token>.
 
    To access protected endpoints first login to api, then include the generated JWT token in the Authorization header of your requests.
 
@@ -268,153 +289,129 @@ Answer from request body to **log-in**:
 }
 ```
 ```
-POST: /api/books/
+POST: /api/jobs/
 ```
-Example of request body to **create new book**:
+Example of request body to **create new jobs**:
 ```json
 {
-  "title": "Book title",
-  "author": "Book author",
-  "price": 200, 
-  "description": "Description for book",
-  "coverImage": "Book image",
-  "isbn": "ISBN-123456",
-  "categoryIds": [1, 2]
+  "title": "Java Developer",
+  "description": "Develop backend microservices",
+  "requiredSkills": ["Java", "Spring Boot", "SQL"],
+  "company": "Tech Corp",
+  "location": "Kyiv",
+  "salary": 5000.00,
+  "workFormat": "Remote"
 }
 ```
-```json
-Answer from request body to **create new book**:
-{
-  "id": 1,
-  "title": "Book title",
-  "author": "Book author",
-  "price": 200, 
-  "description": "Description for book",
-  "coverImage": "Book image",
-  "isbn": "ISBN-123456",
-  "categoryIds": [1, 2]
-}
-```
-```
-DELETE: /api/books/{id}
-Example of request body to **delete book with id**:
-```
+Answer from request body to **create new job**:
 ```json
 {
-  "id": 1,
-  "title": "Book title",
-  "author": "Book author",
-  "price": 200, 
-  "description": "Description for book",
-  "coverImage": "Book image",
-  "isbn": "ISBN-123456",
-  "categoryIds": [1, 2]
+  "id": "1",       
+  "title": "Java Developer",
+  "description": "Develop backend microservices",
+  "requiredSkills": ["Java", "Spring Boot", "SQL"],
+  "company": "Tech Corp",
+  "location": "Kyiv",
+  "salary": 5000.00,
+  "workFormat": "Remote"
 }
 ```
 ```
-Answer from request body to **delete book with id**:
+DELETE: /api/jobs/{id}
+Example of request body to **delete job with id**:
+```
+```json
+{
+  "id": "1",
+  "title": "Java Developer",
+  "description": "Develop backend microservices",
+  "requiredSkills": ["Java", "Spring Boot", "SQL"],
+  "company": "Tech Corp",
+  "location": "Kyiv",
+  "salary": 5000.00,
+  "workFormat": "Remote"
+}
+```
+```
+Answer from request body to **delete job with id**:
 Status 204 No Content
 
-PUT: /api/books/{id}
-Example of request body to **modernization book with id**:
+PUT: /api/jobs/{id}
+Example of request body to **modernization job with id**:
 ```
 ```json
 {
-  "id": 1,
-  "title": "Book title",
-  "author": "Book author",
-  "price": 350, 
-  "description": "Description for book",
-  "coverImage": "Book image",
-  "isbn": "ISBN-123456",
-  "categoryIds": [1, 2]
+  "id": "1",
+  "title": "Java Developer",
+  "description": "Develop backend microservices",
+  "requiredSkills": ["Java", "Spring Boot", "SQL"],
+  "company": "Tech Corp",
+  "location": "Kyiv",
+  "salary": 5000.00,
+  "workFormat": "Remote"
 }
 ```
 ```
-Answer from request body to **put book with id**:
+Answer from request body to **put job with id**:
 Status 200 Ok
 
-GET: /api/books
-Answer from request body **get all books**:
+GET: /api/jobs
+Answer from request body **get all jobs**:
 ```
 ```json
 [
     {
-        "id": 2,
-        "title": "Some Secrets Should Never Be Kept: Protect children from unsafe touch by teaching them to always speak up",
-        "author": "Jayneen L Sanders",
-        "isbn": "0987186019",
-        "price": 45,
-        "description": "The beautifully illustrated children's picture book that sensitively broaches the subject of keeping children safe from inappropriate touch"
+      "id": "1",
+      "title": "Java Developer",
+      "description": "Develop backend microservices",
+      "requiredSkills": ["Java", "Spring Boot", "SQL"],
+      "company": "Tech Corp",
+      "location": "Kyiv",
+      "salary": 5000.00,
+      "workFormat": "Remote"
     },
     {
-        "id": 3,
-        "title": "It's Not You: Identifying and Healing from Narcissistic People",
-        "author": "Ramani Durvasula",
-        "isbn": "0593492625",
-        "price": 39,
-        "description": "A compassionate road map and survival guide for people in narcissistic relationships.."
+      "id": "2",
+      "title": "Java Developer",
+      "description": "Develop backend",
+      "requiredSkills": ["Java", "Spring Boot", "Hibernate"],
+      "company": "Entri",
+      "location": "Kyiv",
+      "salary": 2000.00,
+      "workFormat": "Remote"
     },
     {
-        "id": 4,
-        "title": "Motivational Interviewing, Third Edition: Helping People Change",
-        "author": "Stephen Rollnick",
-        "isbn": "31609182278",
-        "price": 105,
-        "description": "Interviewing."
-    },
-    {
-        "id": 5,
-        "title": "Updated Title",
-        "author": "Updated Author",
-        "isbn": "978-1234567890",
-        "price": 35,
-        "description": "Updated description"
-    },
-    {
-        "id": 9,
-        "title": "Book title",
-        "author": "Book author",
-        "isbn": "ISBN-123456",
-        "price": 350,
-        "description": "Description for book"
+      "id": "3",
+      "title": "Java Developer",
+      "description": "Develop backend",
+      "requiredSkills": ["Java"],
+      "company": "Uni",
+      "location": "Kyiv",
+      "salary": 900.00,
+      "workFormat": "Remote"
     }
 ]
 ```
 ```
-GET: /api/books/{id}
-Answer from request body **get book with id = 2**:
+GET: /api/jobs/{id}
+Answer from request body **get job with id = 2**:
 ```
 ```json
 {
-    "id": 2,
-    "title": "Some Secrets Should Never Be Kept: Protect children from unsafe touch by teaching them to always speak up",
-    "author": "Jayneen L Sanders",
-    "isbn": "0987186019",
-    "price": 45,
-    "description": "The beautifully illustrated children's picture book that sensitively broaches the subject of keeping children safe from inappropriate touch"
+  "id": "2",
+  "title": "Java Developer",
+  "description": "Develop backend",
+  "requiredSkills": ["Java", "Spring Boot", "Hibernate"],
+  "company": "Entri",
+  "location": "Kyiv",
+  "salary": 2000.00,
+  "workFormat": "Remote"
 }
-```
-```
-GET: /api/books/search?authors=Jayneen L Sanders
-Answer from request body **get book with author = Jayneen L Sanders**:
-```
-```json
-[
-    {
-        "id": 2,
-        "title": "Some Secrets Should Never Be Kept: Protect children from unsafe touch by teaching them to always speak up",
-        "author": "Jayneen L Sanders",
-        "isbn": "0987186019",
-        "price": 45,
-        "description": "The beautifully illustrated children's picture book that sensitively broaches the subject of keeping children safe from inappropriate touch"
-    }
-]
 ```
 ```
 
 
 ## Conclusion
-The book-shop is designed to offer a seamless experience for managing bookstore operations.
+The jobHelper is designed to manage job search operations.
 
 Whether you're a developer looking to understand the codebase or a user interested in utilizing the features, this README provides a comprehensive guide to get started.
