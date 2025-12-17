@@ -1,22 +1,18 @@
-FROM eclipse-temurin:17-jdk-jammy AS builder
+FROM maven:3.9.9-eclipse-temurin-17 AS builder
 
 WORKDIR /app
 
-ARG JAR_FILE=target/*.jar
-COPY ${JAR_FILE} app.jar
+COPY pom.xml .
+COPY src ./src
 
-RUN java -Djarmode=layertools -jar app.jar extract
-
+RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:17-jdk-jammy
 
 WORKDIR /app
 
-COPY --from=builder /app/dependencies/ ./
-COPY --from=builder /app/spring-boot-loader/ ./
-COPY --from=builder /app/snapshot-dependencies/ ./
-COPY --from=builder /app/application/ ./
+COPY --from=builder /app/target/*.jar app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
