@@ -1,16 +1,22 @@
-# Stage 1: Extract layers
-FROM eclipse-temurin:17-jdk-jammy
+FROM eclipse-temurin:17-jdk-jammy AS builder
+
 WORKDIR /app
+
 ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
+
 RUN java -Djarmode=layertools -jar app.jar extract
 
-# Stage 2: Build image
-FROM openjdk:17-jdk-slim
+
+FROM eclipse-temurin:17-jdk-jammy
+
 WORKDIR /app
+
 COPY --from=builder /app/dependencies/ ./
 COPY --from=builder /app/spring-boot-loader/ ./
 COPY --from=builder /app/snapshot-dependencies/ ./
 COPY --from=builder /app/application/ ./
-ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]
+
 EXPOSE 8080
+
+ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]
