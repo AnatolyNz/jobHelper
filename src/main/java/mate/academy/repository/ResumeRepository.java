@@ -21,10 +21,15 @@ public interface ResumeRepository extends JpaRepository<Resume, Long> {
     @Query("SELECT r FROM Resume r JOIN FETCH r.user WHERE r.id = :id")
     Optional<Resume> findWithUserById(@Param("id") Long id);
 
-    @Query("SELECT r FROM Resume r LEFT JOIN FETCH r.skills WHERE r.id = :id")
+    @Query("""
+    SELECT DISTINCT r
+    FROM Resume r
+    LEFT JOIN FETCH r.skills
+    WHERE r.id = :id
+            """)
     Optional<Resume> findByIdWithSkills(@Param("id") Long id);
 
-    @Query("""
+    /**@Query("""
             SELECT DISTINCT r
             FROM Resume r
             LEFT JOIN FETCH r.jobMatches
@@ -34,5 +39,5 @@ public interface ResumeRepository extends JpaRepository<Resume, Long> {
             JOIN FETCH u.roles
             WHERE r.id = :id
                     """)
-    Optional<Resume> findByIdWithSkillsAndUserRoles(@Param("id") Long id);
+    Optional<Resume> findByIdWithSkillsAndUserRoles(@Param("id") Long id);*/
 }

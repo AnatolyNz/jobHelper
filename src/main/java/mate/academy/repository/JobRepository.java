@@ -9,7 +9,11 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface JobRepository extends JpaRepository<Job, Long> {
 
-    @Query("SELECT j FROM Job j LEFT JOIN FETCH j.requiredSkills")
+    @Query("""
+    SELECT DISTINCT j
+    FROM Job j
+    LEFT JOIN FETCH j.requiredSkills
+            """)
     Page<Job> findAllWithRequiredSkills(Pageable pageable);
 
     @Query("SELECT j FROM Job j LEFT JOIN FETCH j.requiredSkills WHERE j.id = :jobId")
