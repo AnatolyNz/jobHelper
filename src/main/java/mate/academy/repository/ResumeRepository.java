@@ -28,16 +28,4 @@ public interface ResumeRepository extends JpaRepository<Resume, Long> {
     WHERE r.id = :id
             """)
     Optional<Resume> findByIdWithSkills(@Param("id") Long id);
-
-    /**@Query("""
-            SELECT DISTINCT r
-            FROM Resume r
-            LEFT JOIN FETCH r.jobMatches
-            LEFT JOIN FETCH r.skills
-            LEFT JOIN FETCH r.extractedSkills
-            JOIN FETCH r.user u
-            JOIN FETCH u.roles
-            WHERE r.id = :id
-                    """)
-    Optional<Resume> findByIdWithSkillsAndUserRoles(@Param("id") Long id);*/
 }
