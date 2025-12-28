@@ -11,6 +11,7 @@ import mate.academy.repository.ResumeRepository;
 import mate.academy.service.AtsEvaluationService;
 import mate.academy.service.ResumeParserService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +34,7 @@ public class AtsEvaluationServiceImpl implements AtsEvaluationService {
     private final ResumeParserService resumeParserService;
 
     @Override
+    @Transactional
     public AtsEvaluation evaluateResume(Long resumeId) {
         Resume resume = resumeRepository.findById(resumeId)
                 .orElseThrow(() -> new EntityNotFoundException("Resume not found: " + resumeId));
@@ -79,7 +81,10 @@ public class AtsEvaluationServiceImpl implements AtsEvaluationService {
                     + "Improve structure and clarity.";
         }
 
-        AtsEvaluation evaluation = new AtsEvaluation();
+        AtsEvaluation evaluation = atsEvaluationRepository
+                .findByResumeId(resumeId)
+                .orElseGet(AtsEvaluation::new);
+
         evaluation.setResume(resume);
         evaluation.setScore(totalScore);
         evaluation.setFeedback(feedback);
