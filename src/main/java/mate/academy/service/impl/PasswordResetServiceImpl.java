@@ -3,6 +3,7 @@ package mate.academy.service.impl;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import mate.academy.exception.EntityNotFoundException;
 import mate.academy.model.PasswordResetToken;
 import mate.academy.model.User;
@@ -13,6 +14,7 @@ import mate.academy.service.PasswordResetService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PasswordResetServiceImpl implements PasswordResetService {
@@ -33,9 +35,12 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
     @Override
     public String generatePasswordResetToken(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "User not found with email: " + email));
+        User user = userRepository.findByEmail(email).orElse(null);
+
+        if (user == null) {
+            log.warn("Password reset requested for non-existing email: {}", email);
+            return "dummy-token";
+        }
 
         String token = UUID.randomUUID().toString();
 
@@ -47,16 +52,13 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         tokenRepository.save(resetToken);
 
         try {
-            System.out.println("BEFORE sending email");
+            log.info("BEFORE sending email");
 
             emailService.sendResetLink(email, token);
 
-            System.out.println("AFTER sending email");
+            log.info("AFTER sending email");
         } catch (Exception e) {
-            System.out.println("EMAIL SENDING FAILED:");
-            e.printStackTrace();
-
-            throw new RuntimeException("Email sending failed", e);
+            log.error("EMAIL SENDING FAILED", e);
         }
 
         return token;
