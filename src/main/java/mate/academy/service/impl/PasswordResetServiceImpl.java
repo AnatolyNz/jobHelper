@@ -46,7 +46,18 @@ public class PasswordResetServiceImpl implements PasswordResetService {
 
         tokenRepository.save(resetToken);
 
-        emailService.sendResetLink(email, token);
+        try {
+            System.out.println("BEFORE sending email");
+
+            emailService.sendResetLink(email, token);
+
+            System.out.println("AFTER sending email");
+        } catch (Exception e) {
+            System.out.println("EMAIL SENDING FAILED:");
+            e.printStackTrace();
+
+            throw new RuntimeException("Email sending failed", e);
+        }
 
         return token;
     }
